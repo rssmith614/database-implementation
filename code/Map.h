@@ -63,7 +63,7 @@ public:
 	// if the key is not there, then a garbage (newly initialized) Data item is
 	// returned.  "Plays nicely" with IsThere in the sense that if IsThere found
 	// an item, Find will immediately return that item w/o having to locate it
-	Data &Find (Key& findMe);
+	Data& Find (Key& findMe);
 
 	// swap two of the maps
 	void Swap (Map& withMe);

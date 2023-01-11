@@ -15,34 +15,12 @@ using namespace std;
 
 
 class Catalog {
-private:
+protected:
 	/* Data structures to keep catalog data in memory.
 	 * A series of data structures you may find useful are included.
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
 	 */
-	string filename;
-	sqlite3 *db;
-	sqlite3_stmt *stmt_handle = 0;
-	const char *stmt_leftover;
-	vector<string> table_names;
-	unordered_map<string, Schema> schema_map;
-	unordered_map<string, int> num_tuples;
-	unordered_map<string, string> files;
-	char buffer[10000];
-	bool dirty;
-
-     struct Table {
-		 int numTumples;
-		 //Schema schema;
-		 string fPath;
-	 };
-
-	bool flag;			// true if database is changed, false otherwise
-	map<string, Table> tableMap;		// map from table name to its info object (Table)
-	map<string, Schema> schemaMap;		// map from table name to its schema
-
-
 
 public:
 	/* Catalog constructor.

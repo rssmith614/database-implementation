@@ -4,9 +4,7 @@
 // Basic doubly linked list
 // Type requires Swap
 
-#include "Swap.h"
 #include "Swapify.h"
-#include "Keyify.h"
 
 using namespace std;
 
