@@ -14,13 +14,14 @@ Swapify <Type> :: Swapify () {
 }
 
 template <class Type>
-Swapify <Type> :: Swapify (const Type castFromMe) {
-	data = castFromMe;
+Swapify <Type> :: Swapify (const Type _castFromMe) {
+	data = _castFromMe;
 }
 
 template <class Type>
 Swapify <Type> :: ~Swapify () {
 }
+
 
 template <class Type>
 Swapify <Type> :: operator Type () {
@@ -28,27 +29,28 @@ Swapify <Type> :: operator Type () {
 }
 
 template <class Type> void
-Swapify <Type> :: Swap (Swapify &withMe) {
-	SWAP(data, withMe.data);
+Swapify <Type> :: Swap (Swapify& _withMe) {
+	SWAP(data, _withMe.data);
 }
 
 template <class Type> void
-Swapify <Type> :: CopyFrom (Swapify &fromMe) {
-	data = fromMe.data;
+Swapify <Type> :: CopyFrom (Swapify& _fromMe) {
+	data = _fromMe.data;
 }
+
 
 // redefine operator << for printing
 template <class Type> ostream&
-operator<<(ostream& output, const Swapify<Type>& _s) {
+operator<<(ostream& _output, const Swapify<Type>& _s) {
 	Swapify<Type> newObject;
 	newObject.Swap(const_cast<Swapify<Type>&>(_s));
 
 	Type st = newObject;
-	output << st;
+	_output << st;
 
 	newObject.Swap(const_cast<Swapify<Type>&>(_s));
 
-	return output;
+	return _output;
 }
 
 #endif //_SWAPIFY_CC_

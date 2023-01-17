@@ -14,8 +14,8 @@ Keyify <Type> :: Keyify () {
 }
 
 template <class Type>
-Keyify <Type> :: Keyify (const Type castFromMe) {
-	data = castFromMe;
+Keyify <Type> :: Keyify (const Type _castFromMe) {
+	data = _castFromMe;
 }
 
 template <class Type>
@@ -28,37 +28,37 @@ Keyify <Type> :: operator Type () {
 }
 
 template <class Type> void
-Keyify <Type> :: Swap (Keyify &withMe) {
-	SWAP(data, withMe.data);
+Keyify <Type> :: Swap (Keyify& _withMe) {
+	SWAP(data, _withMe.data);
 }
 
 template <class Type> void
-Keyify <Type> :: CopyFrom (Keyify &withMe) {
-	data = withMe.data;
+Keyify <Type> :: CopyFrom (Keyify& _withMe) {
+	data = _withMe.data;
 }
 
 template <class Type> int
-Keyify <Type> :: IsEqual(Keyify &checkMe) {
-	return (data == checkMe.data);
+Keyify <Type> :: IsEqual(Keyify& _checkMe) {
+	return (data == _checkMe.data);
 }
 
 template <class Type> int
-Keyify <Type> :: LessThan (Keyify &checkMe) {
-	return (data < checkMe.data);
+Keyify <Type> :: LessThan (Keyify& _checkMe) {
+	return (data < _checkMe.data);
 }
 
 // redefine operator << for printing
 template <class Type> ostream&
-operator<<(ostream& output, const Keyify<Type>& _s) {
+operator<<(ostream& _output, const Keyify<Type>& _s) {
 	Keyify<Type> newObject;
 	newObject.Swap(const_cast<Keyify<Type>&>(_s));
 
 	Type st = newObject;
-	output << st;
+	_output << st;
 
 	newObject.Swap(const_cast<Keyify<Type>&>(_s));
 
-	return output;
+	return _output;
 }
 
 #endif //_KEYIFY_CC_

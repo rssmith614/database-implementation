@@ -1,6 +1,7 @@
 #ifndef _LIST_C
 #define _LIST_C
 
+#include "Swap.h"
 #include "List.h"
 #include "Swapify.cc"
 
@@ -17,8 +18,8 @@ List <Type> :: List () {
 	list = new Header;
 
 	// set up the initial values for an empty list
-	list->first = new Node;
-	list->last = new Node;
+	list->first = new Node();
+	list->last = new Node();
 	list->current = list->first;
 	list->leftSize = 0;
 	list->rightSize = 0;
@@ -30,7 +31,7 @@ List <Type> :: List () {
 template <class Type>
 List <Type> :: ~List () {
 	MoveToStart ();
-	while (RightLength ()) {
+	while (RightLength () > 0) {
 		Type temp;
 		Remove (temp);
 	}
@@ -48,9 +49,9 @@ List <Type> :: ~List () {
 
 // swap operator
 template <class Type> void
-List <Type> :: Swap (List& List) {
-	Header *temp = List.list;
-	List.list = list;
+List <Type> :: Swap (List& _list) {
+	Header* temp = _list.list;
+	_list.list = list;
 	list = temp;
 }
 
@@ -93,25 +94,24 @@ List <Type> :: MoveToFinish () {
 // determine the number of items to the left of the current node
 template <class Type> int
 List <Type> :: LeftLength () {
-	return (list->leftSize);
+	return list->leftSize;
 }
 
 // determine the number of items to the right of the current node
 template <class Type> int
 List <Type> :: RightLength () {
-	return (list->rightSize);
+	return list->rightSize;
 }
 
 template <class Type> int
 List <Type> :: Length () {
-	return (list->leftSize+list->rightSize);
+	return list->leftSize+list->rightSize;
 }
 
 template <class Type> bool
 List <Type> :: AtStart () {
 	return (list->leftSize == 0);
 }
-
 
 template <class Type> bool
 List <Type> :: AtEnd () {
@@ -122,10 +122,10 @@ List <Type> :: AtEnd () {
 template <class Type> void
 List <Type> :: SwapRights (List& _list) {
 	// swap out everything after the current nodes
-	Node *left_1 = list->current;
-	Node *right_1 = list->current->next;
-	Node *left_2 = _list.list->current;
-	Node *right_2 = _list.list->current->next;
+	Node* left_1 = list->current;
+	Node* right_1 = list->current->next;
+	Node* left_2 = _list.list->current;
+	Node* right_2 = _list.list->current->next;
 
 	left_1->next = right_2;
 	right_2->previous = left_1;
@@ -133,7 +133,7 @@ List <Type> :: SwapRights (List& _list) {
 	right_1->previous = left_2;
 
 	// set the new endpoints
-	Node *temp = list->last;
+	Node* temp = list->last;
 	list->last = _list.list->last;
 	_list.list->last = temp;
 
@@ -142,14 +142,14 @@ List <Type> :: SwapRights (List& _list) {
 	list->rightSize = tempint;
 }
 
-// swap the leftt sides of the two lists
+// swap the left sides of the two lists
 template <class Type> void
 List <Type> :: SwapLefts (List& _list) {
 	// swap out everything after the current nodes
-	Node *left_1 = list->current;
-	Node *right_1 = list->current->next;
-	Node *left_2 = _list.list->current;
-	Node *right_2 = _list.list->current->next;
+	Node* left_1 = list->current;
+	Node* right_1 = list->current->next;
+	Node* left_2 = _list.list->current;
+	Node* right_2 = _list.list->current->next;
 
 	left_1->next = right_2;
 	right_2->previous = left_1;
@@ -157,7 +157,7 @@ List <Type> :: SwapLefts (List& _list) {
 	right_1->previous = left_2;
 
 	// set the new front points
-	Node *temp = list->first;
+	Node* temp = list->first;
 	list->first = _list.list->first;
 	_list.list->first = temp;
 
@@ -171,28 +171,33 @@ List <Type> :: SwapLefts (List& _list) {
 	list->leftSize = tempint;
 }
 
+template <class Type> Type&
+List <Type> :: Current () {
+	return list->current->next->data;
+}
+
 // move forwards through the list
 template <class Type> void
 List <Type> :: Advance () {
-	(list->rightSize)--;
-	(list->leftSize)++;
+	list->rightSize--;
+	list->leftSize++;
 	list->current = list->current->next;
 }
 
 // move backwards through the list
 template <class Type> void
 List <Type> :: Retreat () {
-	(list->rightSize)++;
-	(list->leftSize)--;
+	list->rightSize++;
+	list->leftSize--;
 	list->current = list->current->previous;
 }
 
 // insert an item at the current position
 template <class Type> void
 List <Type> :: Insert (Type& _item) {
-	Node *temp = new Node;
-	Node *left = list->current;
-	Node *right = list->current->next;
+	Node* temp = new Node();
+	Node* left = list->current;
+	Node* right = list->current->next;
 
 	left->next = temp;
 	temp->previous = left;
@@ -208,11 +213,6 @@ template <class Type> void
 List <Type> :: Append (Type& _item) {
 	MoveToFinish();
 	Insert(_item);
-}
-
-template <class Type> Type&
-List <Type> :: Current () {
-	return list->current->next->data;
 }
 
 // remove an item from the current position

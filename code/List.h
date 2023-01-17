@@ -11,11 +11,7 @@ using namespace std;
 
 template <class Type>
 class List {
-
 public:
-	// type definitions to make our life easier
-	typedef Type element;
-
 	// basic constructor function
 	List ();
 
@@ -63,13 +59,12 @@ public:
 	void MoveToStart ();
 	void MoveToFinish ();
 
-private:
-
+protected:
 	struct Node {
 		// data
 		Type data;
-		Node *next;
-		Node *previous;
+		Node* next;
+		Node* previous;
 
 		// constructor
 		Node () : next (0), previous (0) {}
@@ -81,6 +76,7 @@ private:
 		Node* first;
 		Node* last;
 		Node* current;
+
 		int leftSize;
 		int rightSize;
 	};
@@ -94,8 +90,8 @@ private:
 	List operator= (List&);
 };
 
-typedef List<SwapDouble> DoubleContainer;
-typedef List<SwapInt> IntContainer;
-typedef List<SwapString> StringContainer;
+typedef List<SwapDouble> DoubleList;
+typedef List<SwapInt> IntList;
+typedef List<SwapString> StringList;
 
 #endif

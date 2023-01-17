@@ -2,10 +2,9 @@
 #define _SWAPIFY_H_
 
 // The following templates are used to quickly and easily create a class that
-// wraps around a simple type (such as int) and can be put into TwoWayList or
-// (In)EfficientMap.
+// wraps around a simple type (such as int) and can be put into Vector, List or Map.
 // The "Swapify" template attaches only a Swap operation (so a simple type can
-// be used with TwoWayList).
+// be used with Vector or List).
 
 // SPECIAL NOTE: ONLY USE THESE TEMPLATES WITH SIMPLE TYPES (int, double, etc.)
 // These templates use the = operation, so they are only safe with such types.
@@ -18,17 +17,17 @@ using namespace std;
 
 template <class Type>
 class Swapify {
-private:
+protected:
 	Type data;
 
 public:
-	void Swap (Swapify& withMe);
-	Swapify (const Type castFromMe);
-	void CopyFrom(Swapify& FromMe);
-	operator Type();
-
 	Swapify ();
+	Swapify (const Type);
 	virtual ~Swapify ();
+
+	operator Type();
+	void Swap (Swapify&);
+	void CopyFrom(Swapify&);
 };
 
 typedef Swapify<double> SwapDouble;
