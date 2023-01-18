@@ -30,34 +30,34 @@ public:
 	// add at the end of the list
 	void Append (Type&);
 
-	// look at the current item
-	Type& Current ();
-
 	// remove from current position
 	void Remove (Type&);
 
-	// move the current pointer position backward through the list
-	void Retreat ();
+	// operations to consult state
+	bool AtStart ();
+	bool AtEnd ();
+
+	// operations to move the the start of end of a list
+	void MoveToStart ();
+	void MoveToFinish ();
+
+	// look at the current item
+	Type& Current ();
 
 	// move the current pointer position forward through the list
 	void Advance ();
+
+	// move the current pointer position backward through the list
+	void Retreat ();
 
 	// operations to check the size of both sides
 	int LeftLength ();
 	int RightLength ();
 	int Length();
 
-	// operations to consult state
-	bool AtStart ();
-	bool AtEnd ();
-
 	// operations to swap the left and right sides of two lists
 	void SwapLefts (List&);
 	void SwapRights (List&);
-
-	// operations to move the the start of end of a list
-	void MoveToStart ();
-	void MoveToFinish ();
 
 protected:
 	struct Node {

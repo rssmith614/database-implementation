@@ -1,7 +1,6 @@
 #ifndef _LIST_C
 #define _LIST_C
 
-#include "Swap.h"
 #include "List.h"
 #include "Swapify.cc"
 
@@ -15,7 +14,7 @@ using namespace std;
 template <class Type>
 List <Type> :: List () {
 	// allocate space for the header
-	list = new Header;
+	list = new Header();
 
 	// set up the initial values for an empty list
 	list->first = new Node();
@@ -35,13 +34,8 @@ List <Type> :: ~List () {
 		Type temp;
 		Remove (temp);
 	}
-
-	// kill all the nodes
-	for (int i = 0; i <= list->leftSize + list->rightSize; i++) {
-		list->first = list->first->next;
-		delete list->first->previous;
-	}
 	delete list->first;
+	delete list->last;
 
 	// kill the header
 	delete list;
@@ -75,6 +69,53 @@ List <Type> :: CopyFrom (List& _list) {
 	}
 }
 
+// insert an item at the current position
+template <class Type> void
+List <Type> :: Insert (Type& _item) {
+	Node* temp = new Node();
+	Node* left = list->current;
+	Node* right = list->current->next;
+
+	left->next = temp;
+	temp->previous = left;
+	temp->next = right;
+	right->previous = temp;
+
+	temp->data.Swap (_item);
+
+	list->rightSize += 1;
+}
+
+template <class Type> void
+List <Type> :: Append (Type& _item) {
+	MoveToFinish();
+	Insert(_item);
+}
+
+// remove an item from the current position
+template <class Type> void
+List <Type> :: Remove (Type& _item) {
+	Node* temp = list->current->next;
+	list->current->next = temp->next;
+	temp->next->previous = list->current;
+
+	_item.Swap (temp->data);
+
+	delete temp;
+
+	list->rightSize--;
+}
+
+template <class Type> bool
+List <Type> :: AtStart () {
+	return (list->leftSize == 0);
+}
+
+template <class Type> bool
+List <Type> :: AtEnd () {
+	return (list->rightSize == 0);
+}
+
 // make the first node the current node
 template <class Type> void
 List <Type> :: MoveToStart () {
@@ -89,6 +130,27 @@ List <Type> :: MoveToFinish () {
 	list->current = list->last->previous;
 	list->leftSize += list->rightSize;
 	list->rightSize = 0;
+}
+
+template <class Type> Type&
+List <Type> :: Current () {
+	return list->current->next->data;
+}
+
+// move forwards through the list
+template <class Type> void
+List <Type> :: Advance () {
+	list->rightSize--;
+	list->leftSize++;
+	list->current = list->current->next;
+}
+
+// move backwards through the list
+template <class Type> void
+List <Type> :: Retreat () {
+	list->rightSize++;
+	list->leftSize--;
+	list->current = list->current->previous;
 }
 
 // determine the number of items to the left of the current node
@@ -106,40 +168,6 @@ List <Type> :: RightLength () {
 template <class Type> int
 List <Type> :: Length () {
 	return list->leftSize+list->rightSize;
-}
-
-template <class Type> bool
-List <Type> :: AtStart () {
-	return (list->leftSize == 0);
-}
-
-template <class Type> bool
-List <Type> :: AtEnd () {
-	return (list->rightSize == 0);
-}
-
-// swap the right sides of two lists
-template <class Type> void
-List <Type> :: SwapRights (List& _list) {
-	// swap out everything after the current nodes
-	Node* left_1 = list->current;
-	Node* right_1 = list->current->next;
-	Node* left_2 = _list.list->current;
-	Node* right_2 = _list.list->current->next;
-
-	left_1->next = right_2;
-	right_2->previous = left_1;
-	left_2->next = right_1;
-	right_1->previous = left_2;
-
-	// set the new endpoints
-	Node* temp = list->last;
-	list->last = _list.list->last;
-	_list.list->last = temp;
-
-	int tempint = _list.list->rightSize;
-	_list.list->rightSize = list->rightSize;
-	list->rightSize = tempint;
 }
 
 // swap the left sides of the two lists
@@ -171,83 +199,50 @@ List <Type> :: SwapLefts (List& _list) {
 	list->leftSize = tempint;
 }
 
-template <class Type> Type&
-List <Type> :: Current () {
-	return list->current->next->data;
-}
-
-// move forwards through the list
+// swap the right sides of two lists
 template <class Type> void
-List <Type> :: Advance () {
-	list->rightSize--;
-	list->leftSize++;
-	list->current = list->current->next;
+List <Type> :: SwapRights (List& _list) {
+	// swap out everything after the current nodes
+	Node* left_1 = list->current;
+	Node* right_1 = list->current->next;
+	Node* left_2 = _list.list->current;
+	Node* right_2 = _list.list->current->next;
+
+	left_1->next = right_2;
+	right_2->previous = left_1;
+	left_2->next = right_1;
+	right_1->previous = left_2;
+
+	// set the new endpoints
+	Node* temp = list->last;
+	list->last = _list.list->last;
+	_list.list->last = temp;
+
+	int tempint = _list.list->rightSize;
+	_list.list->rightSize = list->rightSize;
+	list->rightSize = tempint;
 }
 
-// move backwards through the list
-template <class Type> void
-List <Type> :: Retreat () {
-	list->rightSize++;
-	list->leftSize--;
-	list->current = list->current->previous;
-}
-
-// insert an item at the current position
-template <class Type> void
-List <Type> :: Insert (Type& _item) {
-	Node* temp = new Node();
-	Node* left = list->current;
-	Node* right = list->current->next;
-
-	left->next = temp;
-	temp->previous = left;
-	temp->next = right;
-	right->previous = temp;
-
-	temp->data.Swap (_item);
-
-	list->rightSize += 1;
-}
-
-template <class Type> void
-List <Type> :: Append (Type& _item) {
-	MoveToFinish();
-	Insert(_item);
-}
-
-// remove an item from the current position
-template <class Type> void
-List <Type> :: Remove (Type& _item) {
-	Node *temp = list->current->next;
-	list->current->next = temp->next;
-	temp->next->previous = list->current;
-
-	_item.Swap (temp->data);
-
-	delete temp;
-
-	(list->rightSize)--;
-}
 
 // redefine operator << for printing
 template <class Type> ostream&
-operator<<(ostream& output, const List<Type>& _list) {
+operator<<(ostream& _output, const List<Type>& _list) {
 	List<Type> newObject;
 	newObject.Swap(const_cast<List<Type>&>(_list));
 
-	output << "(";
+	_output << "(";
 	for (newObject.MoveToStart(); !newObject.AtEnd(); newObject.Advance()) {
 		if (!newObject.AtStart()) {
-			output << ", ";
+			_output << ", ";
 		}
 
-		output << newObject.Current();
+		_output << newObject.Current();
 	}
-	output << ") : " << newObject.Length();
+	_output << ") : " << newObject.Length();
 
 	newObject.Swap(const_cast<List<Type>&>(_list));
 
-	return output;
+	return _output;
 }
 
 #endif

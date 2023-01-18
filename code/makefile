@@ -38,6 +38,13 @@ test-query.o: test-query.cc
 	$(CC) -c test-query.cc
 
 
+test-list.out: test-list.o
+	$(CC) -o test-list.out test-list.o
+	
+test-list.o: test-list.cc List.h List.cc Swapify.h Swapify.cc
+	$(CC) -c test-list.cc
+
+
 Catalog.o: Catalog.h Catalog.cc	
 	$(CC) -c Catalog.cc
 	
