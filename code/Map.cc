@@ -3,6 +3,7 @@
 
 #include "Map.h"
 #include "Keyify.cc"
+#include "Swapify.cc"
 
 #include <cstdlib>
 #include <iostream>
@@ -10,11 +11,16 @@
 using namespace std;
 
 
+// this constant is relatively unimportant... the data structure will have
+// efficient performance up to approximately 2^MAXLEVELS items, but there is
+// no reason to have it too large!
+#define MAXLEVELS 64
+
 // basic constructor function
 template <class Key, class Data>
 Map <Key, Data> :: Map () {
 	// allocate space for the header
-	list = new Header;
+	list = new Header();
 
 	// set up the initial values for an empty list
 	list->first = new Node (MAXLEVELS);
@@ -39,16 +45,88 @@ Map <Key, Data> :: ~Map () {
 	}
 	delete list->first;
 
-	// kill the header
+	// delete the header
 	delete list;
 }
 
 // swap operator
 template <class Key, class Data> void
-Map <Key, Data> :: Swap (Map & List) {
-	Header *temp = List.list;
-	List.list = list;
+Map <Key, Data> :: Swap (Map& _list) {
+	Header* temp = _list.list;
+	_list.list = list;
 	list = temp;
+}
+
+template <class Key, class Data> void
+Map <Key, Data> :: CopyFrom(Map <Key, Data>& _other) {
+	// clean up our content
+	Map empty;
+	Swap(empty);
+
+	// scan the other map and insert one element at the time
+	for (_other.MoveToStart(); !_other.AtEnd(); _other.Advance()){
+		Key myKey;
+		myKey.CopyFrom(_other.CurrentKey());
+		Data myData;
+		myData.CopyFrom(_other.CurrentData());
+
+		Insert(myKey, myData);
+	}
+}
+
+template <class Key, class Data> void
+Map <Key, Data> :: SuckUp(Map <Key, Data>& _other) {
+	// scan the other map and insert one element at the time
+	// _other will not have any valid data after this operation
+	for (_other.MoveToStart(); !_other.AtEnd(); _other.Advance())
+		Insert(_other.CurrentKey(), _other.CurrentData());
+}
+
+template <class Key, class Data> void
+Map <Key, Data> :: Insert (Key& _key, Data& _data) {
+	MoveToStart ();
+
+	// first, we figure out how many levels are in the new node
+	int numLevels = 1;
+	while (drand48 () > 0.5) {
+		numLevels++;
+		if (numLevels == MAXLEVELS) {
+			numLevels--;
+			break;
+		}
+	}
+
+	// now create the node
+	Node* temp = new Node (numLevels);
+	temp->key.Swap (key);
+	temp->data.Swap (data);
+
+	// now, see how many levels we must work thru
+	MoveToStart ();
+	if (list->curDepth < numLevels)
+		list->curDepth = numLevels;
+
+	// actually do the insertion
+	for (int i = list->curDepth-1; i >= 0; i--) {
+		// find the location to insert at this level
+		while (1) {
+			// keep looping until either we reach the end
+			if (AtEnd (i)) {
+				break;
+			}
+			// or we find a larger item
+			if (!CurrentKey(i).LessThan (temp->key))
+				break;
+
+			// if we made it here, we have more data
+			Advance (i);
+		}
+
+		// do the insertion, if we are far enough down
+		if (i < numLevels) {
+			Insert (temp, i);
+		}
+	}
 }
 
 // make the first node the current node
@@ -108,12 +186,6 @@ Map <Key, Data> :: AtEnd () {
 template <class Key, class Data> int
 Map <Key, Data> :: AtEnd (int whichLevel) {
 	return (list->current->next[whichLevel] == list->last);
-}
-
-template <class Key, class Data> void
-Map <Key, Data> :: Clear(void){
-	//the implementation is more intricate
-	//will be done in the future
 }
 
 template <class Key, class Data> int
@@ -222,63 +294,6 @@ Map <Key, Data> :: IsThere (Key &key) {
 	return 0;
 }
 
-template <class Key, class Data> void
-Map <Key, Data> :: Insert (Key &key, Data &data) {
-	MoveToStart ();
-
-	// first, we figure out how many levels are in the new node
-	int numLevels = 1;
-	while (drand48 () > 0.5) {
-		numLevels++;
-		if (numLevels == MAXLEVELS) {
-			numLevels--;
-			break;
-		}
-	}
-
-	// now create the node
-	Node *temp = new Node (numLevels);
-	temp->key.Swap (key);
-	temp->data.Swap (data);
-
-	// now, see how many levels we must work thru
-	MoveToStart ();
-	if (list->curDepth < numLevels)
-		list->curDepth = numLevels;
-
-	// actually do the insertion
-	for (int i = list->curDepth - 1; i >= 0; i--) {
-
-		// find the location to insert at this level
-		while (1) {
-
-			// keep looping until either we reach the end
-			if (AtEnd (i)) {
-				break;
-			}
-
-
-			// or we find a larger item
-			if (!CurrentKey(i).LessThan (temp->key))
-				break;
-
-			// if we made it here, we have more data
-			Advance (i);
-		}
-
-		// do the insertion, if we are far enough down
-		if (i < numLevels) {
-			Insert (temp, i);
-		}
-	}
-}
-
-template <class Key, class Data> void
-Map <Key, Data> :: SuckUp(Map <Key, Data>& other) {
-	// scan the other map and insert one element at the time
-	for (other.MoveToStart(); !other.AtEnd(); other.Advance())
-		Insert(other.CurrentKey(), other.CurrentData());
-}
 
 template <class Key, class Data> int
 Map <Key, Data> :: Length() {
@@ -289,24 +304,6 @@ Map <Key, Data> :: Length() {
 
 	return length;
 }
-
-template <class Key, class Data> void
-Map <Key, Data> :: CopyFrom(Map <Key, Data>& other) {
-	// clean up our content
-	Map empty;
-	Swap(empty);
-
-	// scan the other map and insert one element at the time
-	for (other.MoveToStart(); !other.AtEnd(); other.Advance()){
-		Key myKey;
-		myKey.CopyFrom(other.CurrentKey());
-		Data myData;
-		myData.CopyFrom(other.CurrentData());
-
-		Insert(myKey, myData);
-	}
-}
-
 
 template <class Key, class Data> Data &
 Map <Key, Data> :: CurrentData () {
