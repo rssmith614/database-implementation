@@ -98,8 +98,8 @@ Map <Key, Data> :: Insert (Key& _key, Data& _data) {
 
 	// now create the node
 	Node* temp = new Node (numLevels);
-	temp->key.Swap (key);
-	temp->data.Swap (data);
+	temp->key.Swap (_key);
+	temp->data.Swap (_data);
 
 	// now, see how many levels we must work thru
 	MoveToStart ();
@@ -159,22 +159,22 @@ Map <Key, Data> :: Retreat () {
 
 // move forwards through the list
 template <class Key, class Data> void
-Map <Key, Data> :: Advance (int whichLevel) {
-	list->current = list->current->next[whichLevel];
+Map <Key, Data> :: advance (int _whichLevel) {
+	list->current = list->current->next[_whichLevel];
 }
 
 // insert an item at the current position
 template <class Key, class Data> void
-Map <Key, Data> :: Insert (Node *temp, int whichLevel) {
-	Node *left = list->current;
-	Node *right = list->current->next[whichLevel];
+Map <Key, Data> :: insert (Node* _newN, int _whichLevel) {
+	Node* left = list->current;
+	Node* right = list->current->next[_whichLevel];
 
-	left->next[whichLevel] = temp;
-	temp->next[whichLevel] = right;
+	left->next[_whichLevel] = _newN;
+	temp->next[_whichLevel] = right;
 
-	if (whichLevel == 0) {
+	if (_whichLevel == 0) {
 		temp->previous = left;
-		right->previous = temp;
+		right->previous = _newN;
 	}
 }
 

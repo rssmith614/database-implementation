@@ -112,12 +112,14 @@ public:
 
 protected:
 	// versions of the above that work only at a specific level of the skip list
-	void Insert (Node*, int);
-	void Remove (Node*&, int);
-	void Advance (int);
-	int AtEnd (int);
-	Key& CurrentKey (int);
-	Data& CurrentData (int);
+	void insert (Node*, int);
+	void remove (Node*&, int);
+
+	void advance (int);
+	int atEnd (int);
+
+	Key& currentKey (int);
+	Data& currentData (int);
 };
 
 typedef Map<KeyInt,SwapInt> MapIntInt;
