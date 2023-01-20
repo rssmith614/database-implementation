@@ -31,9 +31,16 @@ int main (int argc, char* argv[]) {
 	cout << "vector = ";
 	cout << iv << endl;
 
-	for (int i = 0; i <= 100; i++) {
-		cout << "v[" << 100-i << "] = " << iv[100-i] << endl;
+	for (int i = 0; i <= 200; i++) {
+		cout << "v[" << 200-i << "] = " << iv[200-i] << endl;
 	}
+
+	for (int i = 0; i <= 200; i++) {
+		SwapInt si = i;
+		iv[i] = si;
+	}
+	cout << "vector = ";
+	cout << iv << endl;
 
 	return 0;
 }

@@ -113,6 +113,9 @@ Vector <Type> :: AtIndex (unsigned int _index, Type& _item) {
 
 template <class Type> Type&
 Vector <Type> :: operator[] (unsigned int _index) {
+	if ((_index < 0) || (_index >= length))
+		return vector[0];
+		
 	return vector[_index];
 }
 	
