@@ -86,7 +86,7 @@ public:
 	// if the key is not there, then a garbage (newly initialized) Data item is
 	// returned.  "Plays nicely" with IsThere in the sense that if IsThere found
 	// an item, Find will immediately return that item w/o having to locate it
-	Data& Find (Key&);
+	int Find (Key&, Data&);
 
 	// the length of the map
 	int Length();
@@ -115,11 +115,11 @@ protected:
 	void insert (Node*, int);
 	void remove (Node*&, int);
 
-	void advance (int);
-	int atEnd (int);
-
 	Key& currentKey (int);
 	Data& currentData (int);
+
+	void advance (int);
+	int atEnd (int);
 };
 
 typedef Map<KeyInt,SwapInt> MapIntInt;

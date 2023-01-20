@@ -24,7 +24,7 @@ Map <Key, Data> :: Map () {
 
 	// set up the initial values for an empty list
 	list->first = new Node (MAXLEVELS);
-	list->last = new Node (MAXLEVELS);
+	list->last = new Node ();
 	list->current = list->first;
 	list->curDepth = 0;
 
@@ -84,16 +84,16 @@ Map <Key, Data> :: SuckUp(Map <Key, Data>& _other) {
 
 template <class Key, class Data> void
 Map <Key, Data> :: Insert (Key& _key, Data& _data) {
-	MoveToStart ();
-
 	// first, we figure out how many levels are in the new node
 	int numLevels = 1;
-	while (drand48 () > 0.5) {
+	double dr = drand48 ();
+	while (dr > 0.5) {
 		numLevels++;
 		if (numLevels == MAXLEVELS) {
 			numLevels--;
 			break;
 		}
+		dr = drand48 ();
 	}
 
 	// now create the node
@@ -102,120 +102,60 @@ Map <Key, Data> :: Insert (Key& _key, Data& _data) {
 	temp->data.Swap (_data);
 
 	// now, see how many levels we must work thru
-	MoveToStart ();
 	if (list->curDepth < numLevels)
 		list->curDepth = numLevels;
 
 	// actually do the insertion
+	MoveToStart ();
 	for (int i = list->curDepth-1; i >= 0; i--) {
 		// find the location to insert at this level
 		while (1) {
 			// keep looping until either we reach the end
-			if (AtEnd (i)) {
+			if (atEnd (i)) {
 				break;
 			}
 			// or we find a larger item
-			if (!CurrentKey(i).LessThan (temp->key))
+			if (!currentKey(i).LessThan (temp->key))
 				break;
 
 			// if we made it here, we have more data
-			Advance (i);
+			advance (i);
 		}
 
 		// do the insertion, if we are far enough down
 		if (i < numLevels) {
-			Insert (temp, i);
+			insert (temp, i);
 		}
 	}
 }
 
-// make the first node the current node
-template <class Key, class Data> void
-Map <Key, Data> :: MoveToStart () {
-	list->current = list->first;
-}
-
-template <class Key, class Data> bool
-Map <Key, Data> :: AtStart () {
-	return (list->current == list->first);
-}
-
-// make the first node the current node
-template <class Key, class Data> void
-Map <Key, Data> :: MoveToFinish () {
-	list->current = list->last->previous;
-}
-
-template <class Key, class Data> void
-Map <Key, Data> :: Advance () {
-	list->current = list->current->next[0];
-}
-
-// move backwards through the list
-template <class Key, class Data> void
-Map <Key, Data> :: Retreat () {
-	list->current = list->current->previous;
-}
-
-// move forwards through the list
-template <class Key, class Data> void
-Map <Key, Data> :: advance (int _whichLevel) {
-	list->current = list->current->next[_whichLevel];
-}
-
-// insert an item at the current position
-template <class Key, class Data> void
-Map <Key, Data> :: insert (Node* _newN, int _whichLevel) {
-	Node* left = list->current;
-	Node* right = list->current->next[_whichLevel];
-
-	left->next[_whichLevel] = _newN;
-	temp->next[_whichLevel] = right;
-
-	if (_whichLevel == 0) {
-		temp->previous = left;
-		right->previous = _newN;
-	}
-}
-
-template <class Key, class Data> bool
-Map <Key, Data> :: AtEnd () {
-	return (list->current->next[0] == list->last);
-}
-
 template <class Key, class Data> int
-Map <Key, Data> :: AtEnd (int whichLevel) {
-	return (list->current->next[whichLevel] == list->last);
-}
-
-template <class Key, class Data> int
-Map <Key, Data> :: Remove (Key &key, Key &removedKey, Data &removedData) {
+Map <Key, Data> :: Remove (Key& _key, Key& _removedKey, Data& _removedData) {
 	MoveToStart ();
 
 	// start at the highest level and work down
-	for (int i = list->curDepth - 1; i >= 0; i--) {
-
-		// find the location to insert at this level
+	for (int i = list->curDepth-1; i >= 0; i--) {
 		while (1) {
-
 			// keep looping until either we reach the end
-			if (AtEnd (i))
+			if (atEnd (i))
 				break;
 
 			// or we find a larger item
-			if (key.LessThan (CurrentKey (i)))
+			if (_key.LessThan (currentKey (i)))
 				break;
 
 			// see if we actually found it
-			if (key.IsEqual (CurrentKey (i))) {
-				Node *temp;
-				Remove (temp, i);
+			if (_key.IsEqual (currentKey (i))) {
+				Node* temp;
+				remove (temp, i);
 
-				// if this is the lowest level, then kill the node
+				// if this is the lowest level, then remove the node
 				if (i == 0) {
-					temp->data.Swap (removedData);
-					temp->key.Swap (removedKey);
+					temp->data.Swap (_removedData);
+					temp->key.Swap (_removedKey);
+
 					delete temp;
+
 					return 1;
 				}
 
@@ -223,77 +163,83 @@ Map <Key, Data> :: Remove (Key &key, Key &removedKey, Data &removedData) {
 			}
 
 			// if we made it here, we have more data to loop thru
-			Advance (i);
+			advance (i);
 		}
-
 	}
 
 	return 0;
-}
-
-template <class Key, class Data> Data &
-Map <Key, Data> :: Find (Key &key) {
-	MoveToStart ();
-
-	// start at the highest level and work down
-	for (int i = list->curDepth - 1; i >= 0; i--) {
-
-		// find the location to go down from this level
-		while (1) {
-
-			// keep looping until either we reach the end
-			if (AtEnd (i))
-				break;
-
-			// or we find a larger item
-			if (key.LessThan (CurrentKey (i)))
-				break;
-
-			// see if we actually found it
-			if (key.IsEqual (CurrentKey (i)))
-				return CurrentData (i);
-
-			// if we made it here, we have more data to loop thru
-			Advance (i);
-		}
-
-	}
-
-	// if we made it here, we did not find it
 }
 
 template <class Key, class Data> int
-Map <Key, Data> :: IsThere (Key &key) {
+Map <Key, Data> :: IsThere (Key& _key) {
 	MoveToStart ();
 
 	// start at the highest level and work down
-	for (int i = list->curDepth - 1; i >= 0; i--) {
-
+	for (int i = list->curDepth-1; i >= 0; i--) {
 		// find the location to go down from this level
 		while (1) {
-
 			// keep looping until either we reach the end
-			if (AtEnd (i))
+			if (atEnd (i))
 				break;
 
 			// or we find a larger item
-			if (key.LessThan (CurrentKey (i)))
+			if (_key.LessThan (currentKey (i)))
 				break;
 
 			// see if we actually found it
-			if (key.IsEqual (CurrentKey (i)))
+			if (_key.IsEqual (currentKey (i))) {
+				if (i > 0) {
+					while (!_key.IsEqual(CurrentKey()))
+						Advance();
+				}
+			
 				return 1;
+			}
 
 			// if we made it here, we have more data to loop thru
-			Advance (i);
+			advance (i);
 		}
-
 	}
 
 	// if we made it here, we did not find it
 	return 0;
 }
 
+template <class Key, class Data> int
+Map <Key, Data> :: Find (Key& _key, Data& _data) {
+	MoveToStart ();
+
+	// start at the highest level and work down
+	for (int i = list->curDepth-1; i >= 0; i--) {
+		// find the location to go down from this level
+		while (1) {
+			// keep looping until either we reach the end
+			if (atEnd (i))
+				break;
+
+			// or we find a larger item
+			if (_key.LessThan (currentKey (i)))
+				break;
+
+			// see if we actually found it
+			if (_key.IsEqual (currentKey (i))) {
+				if (i > 0) {
+					while (!_key.IsEqual(CurrentKey()))
+						Advance();
+				}
+
+				_data = CurrentData ();
+
+				return 1;
+			}
+
+			// if we made it here, we have more data to loop thru
+			advance (i);
+		}
+	}
+
+	return 0;
+}
 
 template <class Key, class Data> int
 Map <Key, Data> :: Length() {
@@ -305,55 +251,114 @@ Map <Key, Data> :: Length() {
 	return length;
 }
 
-template <class Key, class Data> Data &
-Map <Key, Data> :: CurrentData () {
-	return list->current->next[0]->data;
-}
-
-template <class Key, class Data> Key &
+template <class Key, class Data> Key&
 Map <Key, Data> :: CurrentKey () {
 	return list->current->next[0]->key;
 }
 
-template <class Key, class Data> Data &
-Map <Key, Data> :: CurrentData (int whichLevel) {
-	return list->current->next[whichLevel]->data;
+template <class Key, class Data> Data&
+Map <Key, Data> :: CurrentData () {
+	return list->current->next[0]->data;
 }
 
-template <class Key, class Data> Key &
-Map <Key, Data> :: CurrentKey (int whichLevel) {
-	return list->current->next[whichLevel]->key;
+template <class Key, class Data> void
+Map <Key, Data> :: Advance () {
+	list->current = list->current->next[0];
+}
+
+template <class Key, class Data> void
+Map <Key, Data> :: Retreat () {
+	list->current = list->current->previous;
+}
+
+template <class Key, class Data> bool
+Map <Key, Data> :: AtStart () {
+	return (list->current == list->first);
+}
+
+template <class Key, class Data> bool
+Map <Key, Data> :: AtEnd () {
+	return (list->current->next[0] == list->last);
+}
+
+// make the first node the current node
+template <class Key, class Data> void
+Map <Key, Data> :: MoveToStart () {
+	list->current = list->first;
+}
+
+// make the first node the current node
+template <class Key, class Data> void
+Map <Key, Data> :: MoveToFinish () {
+	list->current = list->last->previous;
+}
+
+
+// insert an item at the current position
+template <class Key, class Data> void
+Map <Key, Data> :: insert (Node* _newN, int _whichLevel) {
+	Node* left = list->current;
+	Node* right = list->current->next[_whichLevel];
+
+	left->next[_whichLevel] = _newN;
+	_newN->next[_whichLevel] = right;
+
+	if (_whichLevel == 0) {
+		_newN->previous = left;
+		right->previous = _newN;
+	}
 }
 
 // remove an item from the current position
 template <class Key, class Data> void
-Map <Key, Data> :: Remove (Node *&removeMe, int whichLevel) {
-	removeMe = list->current->next[whichLevel];
-	list->current->next[whichLevel] = removeMe->next[whichLevel];
+Map <Key, Data> :: remove (Node*& _removeMe, int _whichLevel) {
+	_removeMe = list->current->next[_whichLevel];
+	list->current->next[_whichLevel] = _removeMe->next[_whichLevel];
 
-	if (whichLevel == 0)
-		removeMe->next[whichLevel]->previous = list->current;
+	if (_whichLevel == 0)
+		_removeMe->next[_whichLevel]->previous = list->current;
 }
 
+template <class Key, class Data> Key&
+Map <Key, Data> :: currentKey (int _whichLevel) {
+	return list->current->next[_whichLevel]->key;
+}
+
+template <class Key, class Data> Data&
+Map <Key, Data> :: currentData (int _whichLevel) {
+	return list->current->next[_whichLevel]->data;
+}
+
+template <class Key, class Data> void
+Map <Key, Data> :: advance (int _whichLevel) {
+	list->current = list->current->next[_whichLevel];
+}
+
+template <class Key, class Data> int
+Map <Key, Data> :: atEnd (int _whichLevel) {
+	return (list->current->next[_whichLevel] == list->last);
+}
+
+
 // redefine operator << for printing
-template <class Key, class Data> ostream& operator<<(ostream& output,
+template <class Key, class Data> ostream& operator<<(ostream& _output,
 	const Map<Key, Data>& _map) {
 	Map<Key, Data> newObject;
 	newObject.Swap(const_cast<Map<Key, Data>&>(_map));
 
-	output << "[";
+	_output << "[";
 	for (newObject.MoveToStart(); !newObject.AtEnd(); newObject.Advance()) {
 		if (!newObject.AtStart()) {
-			output << ", ";
+			_output << ", ";
 		}
 
-		output << "(" << newObject.CurrentKey() << ", " << newObject.CurrentData() << ")";
+		_output << "(" << newObject.CurrentKey() << ", " << newObject.CurrentData() << ")";
 	}
-	output << "] : " << newObject.Length();
+	_output << "] : " << newObject.Length();
 
 	newObject.Swap(const_cast<Map<Key, Data>&>(_map));
 
-	return output;
+	return _output;
 }
 
 #endif
