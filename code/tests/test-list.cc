@@ -11,7 +11,7 @@ int main (int argc, char* argv[]) {
 	IntList il;
 
 	for (int i = 0; i < 20; i++) {
-		SwapInt si = i;
+		SInt si = i;
 		il.Append(si);
 	}
 	cout << "list = ";
@@ -24,7 +24,7 @@ int main (int argc, char* argv[]) {
 	cout << "list.current = " << il.Current() << endl;
 
 	for (int i = 0; i < 10; i++) {
-		SwapInt si = i+100;
+		SInt si = i+100;
 		il.Insert(si);
 		cout << "list.current = " << il.Current() << endl;
 	}
@@ -44,7 +44,7 @@ int main (int argc, char* argv[]) {
 	il.MoveToStart();
 	cout << "list.current = " << il.Current() << endl;
 	for (int i = 0; i < 10; i++) {
-		SwapInt si;
+		SInt si;
 		il.Remove(si);
 		cout << "list.current = " << il.Current() << endl;
 	}

@@ -11,21 +11,21 @@ int main (int argc, char* argv[]) {
 	IntVector iv;
 
 	for (int i = 0; i < 120; i++) {
-		SwapInt si = i;
+		SInt si = i;
 		iv.Append(si);
 	}
 	cout << "vector = ";
 	cout << iv << endl;
 
 	for (int i = 0; i < 100; i++) {
-		SwapInt si;
+		SInt si;
 		iv.Remove(0, si);
 	}
 	cout << "vector = ";
 	cout << iv << endl;
 
 	for (int i = 0; i < 100; i++) {
-		SwapInt si = i;
+		SInt si = i;
 		iv.Insert(100-i, si);
 	}
 	cout << "vector = ";
@@ -36,7 +36,7 @@ int main (int argc, char* argv[]) {
 	}
 
 	for (int i = 0; i <= 200; i++) {
-		SwapInt si = i;
+		SInt si = i;
 		iv[i] = si;
 	}
 	cout << "vector = ";

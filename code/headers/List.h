@@ -95,8 +95,8 @@ public:
 	void SwapRights (List&);
 };
 
-typedef List<SwapDouble> DoubleList;
-typedef List<SwapInt> IntList;
-typedef List<SwapString> StringList;
+typedef List<SDouble> DoubleList;
+typedef List<SInt> IntList;
+typedef List<SString> StringList;
 
 #endif

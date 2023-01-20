@@ -30,8 +30,8 @@ public:
 	void CopyFrom(Swapify&);
 };
 
-typedef Swapify<double> SwapDouble;
-typedef Swapify<int> SwapInt;
-typedef Swapify<string> SwapString;
+typedef Swapify<double> SDouble;
+typedef Swapify<int> SInt;
+typedef Swapify<string> SString;
 
 #endif //_SWAPIFY_H_

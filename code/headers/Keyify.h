@@ -57,8 +57,8 @@ public:
 	int LessThan(Keyify&);
 };
 
-typedef Keyify<double> KeyDouble;
-typedef Keyify<int> KeyInt;
-typedef Keyify<string> KeyString;
+typedef Keyify<double> KDouble;
+typedef Keyify<int> KInt;
+typedef Keyify<string> KString;
 
 #endif //_KEYIFY_H_

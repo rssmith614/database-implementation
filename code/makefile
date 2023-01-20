@@ -7,96 +7,110 @@ ifdef linux
 endif
 
 
+init:
+	mkdir -p object
+	mkdir -p execs
+	mkdir -p project
+
+
 test-vector.out: test-vector.o
-	$(CC) -o test-vector.out test-vector.o
+	$(CC) -o execs/test-vector.out object/test-vector.o
 	
-test-vector.o: test-vector.cc Vector.h Vector.cc Swapify.h Swapify.cc
-	$(CC) -c test-vector.cc
+test-vector.o: tests/test-vector.cc headers/Vector.h headers/Vector.cc headers/Swapify.h headers/Swapify.cc
+	$(CC) -o object/test-vector.o -c tests/test-vector.cc -I headers/
 
 test-list.out: test-list.o
-	$(CC) -o test-list.out test-list.o
+	$(CC) -o execs/test-list.out object/test-list.o
 	
-test-list.o: test-list.cc List.h List.cc Swapify.h Swapify.cc
-	$(CC) -c test-list.cc
+test-list.o: tests/test-list.cc headers/List.h headers/List.cc headers/Swapify.h headers/Swapify.cc
+	$(CC) -o object/test-list.o -c tests/test-list.cc -I headers/
 
 test-map.out: test-map.o
-	$(CC) -o test-map.out test-map.o
+	$(CC) -o execs/test-map.out object/test-map.o
 	
-test-map.o: test-map.cc Map.h Map.cc Swapify.h Swapify.cc Keyify.h Keyify.cc
-	$(CC) -c test-map.cc
+test-map.o: tests/test-map.cc headers/Map.h headers/Map.cc headers/Swapify.h headers/Swapify.cc headers/Keyify.h headers/Keyify.cc
+	$(CC) -o object/test-map.o -c tests/test-map.cc -I headers/
+
+tests: test-vector.out test-list.out test-map.out
+
+
+Schema.o: source/Schema.cc
+	$(CC) -o object/Schema.o -c source/Schema.cc -I headers
+
+Catalog.o: source/Schema.cc source/Catalog.cc
+	$(CC) -o object/Catalog.o -c source/Catalog.cc -I headers
+	
+Record.o: source/Schema.cc source/Record.cc
+	$(CC) -o object/Record.o -c source/Record.cc -I headers
+
+File.o: source/Schema.cc source/Record.cc source/File.cc
+	$(CC) -o object/File.o -c source/File.cc -I headers
+
+DBFile.o: source/Schema.cc source/Record.cc source/File.cc source/DBFile.cc
+	$(CC) -o object/DBFile.o -c source/DBFile.cc -I headers
+
+Comparison.o: source/Schema.cc source/Record.cc source/Comparison.cc
+	$(CC) -o object/Comparison.o -c source/Comparison.cc -I headers
+
+Function.o: source/Schema.cc source/Record.cc source/Function.cc
+	$(CC) -o object/Function.o -c source/Function.cc -I headers
+
+RelOp.o: source/Schema.cc source/Record.cc source/Comparison.cc source/RelOp.cc	
+	$(CC) -o object/RelOp.o -c source/RelOp.cc -I headers
+	
+QueryOptimizer.o: source/Schema.cc source/Record.cc source/Comparison.cc source/RelOp.cc source/QueryOptimizer.cc
+	$(CC) -o object/QueryOptimizer.o -c source/QueryOptimizer.cc -I headers
+
+QueryCompiler.o: source/Schema.cc source/Record.cc source/Comparison.cc source/RelOp.cc source/QueryOptimizer.cc source/QueryCompiler.cc
+	$(CC) -o object/QueryCompiler.o -c source/QueryCompiler.cc -I headers
+
+
+QueryParser.o: compiler/QueryParser.y
+	yacc --defines=headers/QueryParser.h -o source/QueryParser.c compiler/QueryParser.y
+	sed $(tag) source/QueryParser.c -e "s/  __attribute__ ((__unused__))$$/# ifndef __cplusplus\n  __attribute__ ((__unused__));\n# endif/" 
+	$(CC) -o object/QueryParser.o -c source/QueryParser.c -I headers/
+
+QueryLexer.o: compiler/QueryLexer.l
+	lex -o source/QueryLexer.c compiler/QueryLexer.l
+	gcc -o object/QueryLexer.o -c source/QueryLexer.c -I headers/
+
+compiler: QueryParser.o QueryLexer.o
 
 
 test-phase-1.out: Schema.o Catalog.o test-phase-1.o
-	$(CC) -o test-phase-1.out test-phase-1.o Catalog.o Schema.o -lsqlite3
+	$(CC) -o execs/test-phase-1.out object/test-phase-1.o object/Catalog.o object/Schema.o -lsqlite3
 	
-test-phase-1.o: test-phase-1.cc
-	$(CC) -c test-phase-1.cc
+test-phase-1.o: project/test-phase-1.cc
+	$(CC) -o object/test-phase-1.o -c project/test-phase-1.cc -I headers/
 
-test-phase-2.out: QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-phase-2.o
-	$(CC) -o test-phase-2.out test-phase-2.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o -lfl -lsqlite3
+test-phase-2.out: compiler Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-phase-2.o
+	$(CC) -o execs/test-phase-2.out object/test-phase-2.o object/QueryParser.o object/QueryLexer.o object/Schema.o object/Record.o object/File.o object/DBFile.o object/Comparison.o object/Function.o object/RelOp.o object/Catalog.o object/QueryOptimizer.o object/QueryCompiler.o -lfl -lsqlite3
 	
-test-phase-2.o:	test-phase-2.cc
-	$(CC) -c test-phase-2.cc
+test-phase-2.o:	project/test-phase-2.cc
+	$(CC) -o object/test-phase-2.o -c project/test-phase-2.cc -I headers/
 
-test-phase-3-data-loader.out: QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-phase-3-data-loader.o
-	$(CC) -o test-phase-3-data-loader.out test-phase-3-data-loader.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o -lfl -lsqlite3
+test-phase-3-data-loader.out: compiler Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-phase-3-data-loader.o
+	$(CC) -o execs/test-phase-3-data-loader.out object/test-phase-3-data-loader.o object/QueryParser.o object/QueryLexer.o object/Schema.o object/Record.o object/File.o object/DBFile.o object/Comparison.o object/Function.o object/RelOp.o object/Catalog.o object/QueryOptimizer.o object/QueryCompiler.o -lfl -lsqlite3
 	
-test-phase-3-data-loader.o: test-phase-3-data-loader.cc
-	$(CC) -c test-phase-3-data-loader.cc
+test-phase-3-data-loader.o: project/test-phase-3-data-loader.cc
+	$(CC) -o object/test-phase-3-data-loader.o -c project/test-phase-3-data-loader.cc -I headers/
 
-test-query.out: QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-query.o
-	$(CC) -o test-query.out test-query.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o -lfl -lsqlite3
+test-query.out: compiler Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o test-query.o
+	$(CC) -o execs/test-query.out object/test-query.o object/QueryParser.o object/QueryLexer.o object/Schema.o object/Record.o object/File.o object/DBFile.o object/Comparison.o object/Function.o object/RelOp.o object/Catalog.o object/QueryOptimizer.o object/QueryCompiler.o -lfl -lsqlite3
 	
-test-query.o: test-query.cc
-	$(CC) -c test-query.cc
+test-query.o: project/test-query.cc
+	$(CC) -o object/test-query.o -c project/test-query.cc -I headers/
 
-all: test-phase-1.out test-phase-2.out test-phase-3-data-loader.out test-query.out
-
-
-Catalog.o: Catalog.h Catalog.cc	
-	$(CC) -c Catalog.cc
-	
-Schema.o: Config.h Schema.h Schema.cc	
-	$(CC) -c Schema.cc
-
-Record.o: Schema.cc Record.cc
-	$(CC) -c Record.cc
-
-File.o: Schema.cc Record.cc File.cc
-	$(CC) -c File.cc
-
-DBFile.o: Schema.cc Record.cc File.cc DBFile.cc
-	$(CC) -c DBFile.cc
-
-Comparison.o: Schema.cc Record.cc Comparison.cc
-	$(CC) -c Comparison.cc
-
-Function.o: Schema.cc Record.cc Function.cc
-	$(CC) -c Function.cc
-
-RelOp.o: Schema.cc Record.cc Comparison.cc RelOp.cc	
-	$(CC) -c RelOp.cc
-	
-QueryOptimizer.o: Schema.cc Record.cc Comparison.cc RelOp.cc QueryOptimizer.cc	
-	$(CC) -c QueryOptimizer.cc
-
-QueryCompiler.o: Schema.cc Record.cc Comparison.cc RelOp.cc QueryOptimizer.cc QueryCompiler.cc	
-	$(CC) -c QueryCompiler.cc
+project: test-phase-1.out test-phase-2.out test-phase-3-data-loader.out test-query.out
 
 
-QueryParser.o: QueryParser.y
-	yacc --defines=QueryParser.h -o QueryParser.c QueryParser.y
-	sed $(tag) QueryParser.c -e "s/  __attribute__ ((__unused__))$$/# ifndef __cplusplus\n  __attribute__ ((__unused__));\n# endif/" 
-	$(CC) -c QueryParser.c
-
-QueryLexer.o: QueryLexer.l
-	lex -o QueryLexer.c QueryLexer.l
-	gcc -c QueryLexer.c
+all: init tests project
 
 
 clean: 
-	rm -f *.o
-	rm -f *.out
-	rm -f QueryLexer.c
-	rm -f QueryParser.c
-	rm -f QueryParser.h
+	rm -f object/*.o
+	rm -f tests/*.out
+	rm -f execs/*.out
+	rm -f source/QueryLexer.c
+	rm -f source/QueryParser.c
+	rm -f headers/QueryParser.h

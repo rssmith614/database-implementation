@@ -122,6 +122,4 @@ protected:
 	int atEnd (int);
 };
 
-typedef Map<KeyInt,SwapInt> MapIntInt;
-
 #endif

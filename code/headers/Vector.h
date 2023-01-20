@@ -58,8 +58,8 @@ public:
 	int Length();
 };
 
-typedef Vector<SwapDouble> DoubleVector;
-typedef Vector<SwapInt> IntVector;
-typedef Vector<SwapString> StringVector;
+typedef Vector<SDouble> DoubleVector;
+typedef Vector<SInt> IntVector;
+typedef Vector<SString> StringVector;
 
 #endif

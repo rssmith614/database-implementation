@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "Config.h"
 #include "Swap.h"
 #include "Schema.h"
@@ -23,64 +24,90 @@ Attribute& Attribute::operator=(const Attribute& _other) {
 }
 
 void Attribute::Swap(Attribute& _other) {
-	STL_SWAP(name, _other.name);
+	name.Swap(_other.name);
 	SWAP(type, _other.type);
-	SWAP(noDistinct, _other.noDistinct);
+	noDistinct.Swap(_other.noDistinct);
 }
 
 
-Schema::Schema(vector<string>& _attributes,	vector<string>& _attributeTypes,
-	vector<unsigned int>& _distincts) {
-	for (int i = 0; i < _attributes.size(); i++) {
+Schema::Schema(StringVector& _attributes, StringVector& _attributeTypes,
+	IntVector& _distincts) {
+	for (int i = 0; i < _attributes.Length(); i++) {
 		Attribute a;
+
 		a.name = _attributes[i];
 		a.noDistinct = _distincts[i];
+
 		if (_attributeTypes[i] == "INTEGER" || _attributeTypes[i] == "Integer") a.type = Integer;
 		else if (_attributeTypes[i] == "FLOAT" || _attributeTypes[i] == "Float") a.type = Float;
 		else if (_attributeTypes[i] == "STRING" || _attributeTypes[i] == "String") a.type = String;
-		atts.push_back(a);
+
+		atts.Append(a);
 	}
 }
 
 Schema::Schema(const Schema& _other) {
-	for (int i = 0; i < _other.atts.size(); i++) {
-		Attribute a; a = _other.atts[i];
-		atts.push_back(a);
+	AttributeVector newObject;
+	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
+
+	for (int i = 0; i < newObject.Length(); i++) {
+		Attribute a; a = newObject[i];
+		atts.Append(a);
 	}
+
+	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
 }
 
 Schema& Schema::operator=(const Schema& _other) {
 	// handle self-assignment first
 	if (this == &_other) return *this;
 
-	for (int i = 0; i < _other.atts.size(); i++) {
-		Attribute a; a = _other.atts[i];
-		atts.push_back(a);
+	AttributeVector newObject;
+	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
+
+	for (int i = 0; i < newObject.Length(); i++) {
+		Attribute a; a = newObject[i];
+		atts.Append(a);
 	}
+
+	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
 
 	return *this;
 }
 
+Schema::~Schema() {
+	AttributeVector t;
+	atts.Swap(t);
+}
+
 void Schema::Swap(Schema& _other) {
-	atts.swap(_other.atts);
+	atts.Swap(_other.atts);
+}
+
+unsigned int Schema::GetNumAtts() {
+	return atts.Length();
+}
+
+AttributeVector& Schema::GetAtts() {
+	return atts;
 }
 
 int Schema::Append(Schema& _other) {
-	for (int i = 0; i < _other.atts.size(); i++) {
+	for (int i = 0; i < _other.atts.Length(); i++) {
 		int pos = Index(_other.atts[i].name);
 		if (pos != -1) return -1;
 	}
 
-	for (int i = 0; i < _other.atts.size(); i++) {
+	for (int i = 0; i < _other.atts.Length(); i++) {
 		Attribute a; a = _other.atts[i];
-		atts.push_back(a);
+		atts.Append(a);
 	}
 
 	return 0;
 }
 
-int Schema::Index(string& _attName) {
-	for (int i = 0; i < atts.size(); i++) {
+int Schema::Index(SString& _attName) {
+	for (int i = 0; i < atts.Length(); i++) {
 		if (_attName == atts[i].name) return i;
 	}
 
@@ -88,71 +115,72 @@ int Schema::Index(string& _attName) {
 	return -1;
 }
 
-Type Schema::FindType(string& _attName) {
+Type Schema::FindType(SString& _attName) {
 	int pos = Index(_attName);
 	if (pos == -1) return Integer;
 
 	return atts[pos].type;
 }
 
-int Schema::GetDistincts(string& _attName) {
+SInt Schema::GetDistincts(SString& _attName) {
 	int pos = Index(_attName);
 	if (pos == -1) return -1;
 
 	return atts[pos].noDistinct;
 }
 
-int Schema::SetDistincts(string& _attName, unsigned int& _noDistinct){
+int Schema::SetDistincts(SString& _attName, SInt& _noDistinct){
 	int pos = Index(_attName);
 	if (pos == -1) return -1;
+
 	atts[pos].noDistinct = _noDistinct;
 	return 0;
 }
 
-int Schema::RenameAtt(string& _oldName, string& _newName) {
+int Schema::RenameAtt(SString& _oldName, SString& _newName) {
 	int pos = Index(_newName);
 	if (pos != -1) return -1;
 
 	pos = Index(_oldName);
 	if (pos == -1) return -1;
 
-
 	atts[pos].name = _newName;
 
 	return 0;
 }
 
-int Schema::Project(vector<int>& _attsToKeep) {
-	int numAttsToKeep = _attsToKeep.size();
-	int numAtts = atts.size();
+int Schema::Project(IntVector& _attsToKeep) {
+	int numAttsToKeep = _attsToKeep.Length();
+	int numAtts = atts.Length();
 	
 	// too many attributes to keep
 	if (numAttsToKeep > numAtts) return -1;
 
-	vector<Attribute> copy; atts.swap(copy);
+	AttributeVector copy; atts.Swap(copy);
 
 	for (int i=0; i<numAttsToKeep; i++) {
 		int index = _attsToKeep[i];
 		if ((index >= 0) && (index < numAtts)) {
 			Attribute a; a = copy[index];
-			atts.push_back(a);
+			atts.Append(a);
 		}
 		else {
-			atts.swap(copy);
-			copy.clear();
+			atts.Swap(copy);
+
+			AttributeVector avt; copy.Swap(avt);
 
 			return -1;
 		}
 	}
 
-	copy.clear();
+	AttributeVector avt; copy.Swap(avt);
 
 	return 0;
 }
 
 ostream& operator<<(ostream& _os, Schema& _c) {
 	_os << "(";
-	for(int i=0; i<_c.atts.size(); i++) {
+	for(int i=0; i<_c.atts.Length(); i++) {
 		_os << _c.atts[i].name << ':';
 
 		switch(_c.atts[i].type) {
@@ -171,7 +199,7 @@ ostream& operator<<(ostream& _os, Schema& _c) {
 		}
 
 		_os << " [" << _c.atts[i].noDistinct << "]";
-		if (i < _c.atts.size()-1) _os << ", ";
+		if (i < _c.atts.Length()-1) _os << ", ";
 	}
 	_os << ")";
 
