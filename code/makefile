@@ -7,6 +7,12 @@ ifdef linux
 endif
 
 
+test-vector.out: test-vector.o
+	$(CC) -o test-vector.out test-vector.o
+	
+test-vector.o: test-vector.cc Vector.h Vector.cc Swapify.h Swapify.cc
+	$(CC) -c test-vector.cc
+
 test-list.out: test-list.o
 	$(CC) -o test-list.out test-list.o
 	
