@@ -3,7 +3,9 @@
 
 #include <cstdio>
 #include <iostream>
+
 #include "Schema.h"
+#include "List.cc"
 
 using namespace std;
 
@@ -91,5 +93,7 @@ public:
 
 	void SetOrderMaker(OrderMaker* _order) {compOrder = _order;}
 };
+
+typedef List<Record> RecordList;
 
 #endif //_RECORD_H

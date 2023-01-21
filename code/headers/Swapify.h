@@ -28,6 +28,8 @@ public:
 	operator Type();
 	void Swap (Swapify&);
 	void CopyFrom(Swapify&);
+
+	bool operator== (const Swapify&) const;
 };
 
 typedef Swapify<double> SDouble;

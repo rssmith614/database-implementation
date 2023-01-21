@@ -136,7 +136,7 @@ public:
 
 class NestedLoopJoin : public Join {
 protected:
-	List<Record> list;
+	RecordList list;
 	Record lRec;
 
 public:

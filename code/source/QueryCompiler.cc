@@ -31,7 +31,7 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	Schema* forestSchema = new Schema[nTbl];
 	int idx = 0;
 	for (TableList* node = _tables; node != NULL; node = node->next) {
-		string s = node->tableName;
+		SString s(node->tableName);
 		bool b = catalog->GetSchema(s, forestSchema[idx]);
 		if (false == b) {
 			cout << "Semantic error: table " << s << " does not exist in the database!" << endl;

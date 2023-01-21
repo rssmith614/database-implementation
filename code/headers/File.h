@@ -13,7 +13,7 @@ class Record;
 
 class Page {
 private:
-	List <Record> myRecs;
+	 RecordList myRecs;
 	
 	int numRecs;
 	int curSizeInBytes;

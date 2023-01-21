@@ -38,9 +38,9 @@ Schema::Schema(StringVector& _attributes, StringVector& _attributeTypes,
 		a.name = _attributes[i];
 		a.noDistinct = _distincts[i];
 
-		if (_attributeTypes[i] == "INTEGER" || _attributeTypes[i] == "Integer") a.type = Integer;
-		else if (_attributeTypes[i] == "FLOAT" || _attributeTypes[i] == "Float") a.type = Float;
-		else if (_attributeTypes[i] == "STRING" || _attributeTypes[i] == "String") a.type = String;
+		if (_attributeTypes[i] == SString("INTEGER") || _attributeTypes[i] == SString("Integer")) a.type = Integer;
+		else if (_attributeTypes[i] == SString("FLOAT") || _attributeTypes[i] == SString("Float")) a.type = Float;
+		else if (_attributeTypes[i] == SString("STRING") || _attributeTypes[i] == SString("String")) a.type = String;
 
 		atts.Append(a);
 	}

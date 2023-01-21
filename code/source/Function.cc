@@ -69,7 +69,7 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 		// over, so we will find it in the schema
 		if (parseTree->leftOperand->code == NAME) {
 			// first, make sure that the attribute is there
-			string s(parseTree->leftOperand->value);
+			SString s(parseTree->leftOperand->value);
 			int myNum = mySchema.Index (s);
 			if (myNum == -1) {
 				cerr << "ERROR: Attribute " << s << " in function not found!" << endl;

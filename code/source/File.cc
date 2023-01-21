@@ -9,7 +9,6 @@
 
 #include "Config.h"
 #include "Record.h"
-#include "List.cc"
 #include "File.h"
 
 using namespace std;
@@ -23,7 +22,7 @@ Page :: ~Page() {
 
 void Page :: EmptyItOut() {
 	// get rid of all of the records
-	List<Record> aux; aux.Swap(myRecs);
+	RecordList aux; aux.Swap(myRecs);
 
 	// reset the page size
 	curSizeInBytes = sizeof(int);
@@ -84,7 +83,7 @@ void Page :: FromBinary (char* bits) {
 	char* curPos = bits + sizeof (int);
 
 	// first, empty out the list of current records
-	List<Record> aux; aux.Swap(myRecs);
+	RecordList aux; aux.Swap(myRecs);
 
 	// now loop through and re-populate it
 	Record temp;

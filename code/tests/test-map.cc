@@ -85,5 +85,34 @@ int main (int argc, char* argv[]) {
 	cout << "map = ";
 	cout << mii << endl;
 
+	Map<KInt, KInt> map;
+	KInt k1(1), k2(1), k3(2), k4(1), k5(1), k6(2);
+	KInt v1(0), v2(0), v3(1), v4(1), v5(3), v6(5);
+	map.Insert(k1, v1);
+	map.Insert(k2, v2);
+	map.Insert(k3, v3);
+	map.Insert(k4, v4);
+	map.Insert(k5, v5);
+	map.Insert(k6, v6);
+
+	for (map.MoveToStart(); map.AtEnd() == false; map.Advance()) {
+		int k = map.CurrentKey();
+		int v = map.CurrentData();
+
+		printf("%d %d\n", k, v);
+	}
+
+	printf("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+	
+	KInt k(1);
+	map.IsThere(k);
+	while (map.CurrentKey() == k) {
+		int kk = map.CurrentKey();
+		int vv = map.CurrentData();
+
+		printf("%d %d\n", kk, vv);
+		map.Advance();		
+	}
+
 	return 0;
 }

@@ -20,7 +20,7 @@ int main (int argc, char* argv[]) {
 	string heapFile = argv[2];
 	string textFile = argv[3];
 
-	string catalogFile = "catalog.sqlite";
+	SString catalogFile("catalog.sqlite");
 	Catalog catalog(catalogFile);
 	cout << catalog << endl; cout.flush();
 

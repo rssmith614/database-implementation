@@ -154,8 +154,8 @@ void OrderMaker::Swap(OrderMaker& _swap) {
 }
 
 OrderMaker :: OrderMaker(Schema& schema) : numAtts(0) {
-	unsigned int n = schema.GetNumAtts();
-	vector<Attribute> atts = schema.GetAtts();
+	SInt n = schema.GetNumAtts();
+	AttributeVector& atts = schema.GetAtts();
 
 	//first add the Integer attributes
 	for (int i = 0; i < n; i++) {
@@ -187,7 +187,7 @@ OrderMaker :: OrderMaker(Schema& schema) : numAtts(0) {
 
 OrderMaker :: OrderMaker(Schema& schema, int* _atts, int _atts_no) {
 	numAtts = _atts_no;
-	vector<Attribute> atts = schema.GetAtts();
+	AttributeVector& atts = schema.GetAtts();
 
 	//only the specified attributes are inserted into the sorting order
 	for (int i = 0; i < numAtts; i++) {
@@ -440,7 +440,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			// so we check to see if it is an attribute name, and if so,
 			// we look it up in the schema
 			// see if we can find this attribute in the schema
-			string s(currCond->left->left->value);
+			SString s(currCond->left->left->value);
 			int leftIdx = schema.Index(s);
 			if (leftIdx != -1) {
 				andList[numAnds].operand1 = Left;
@@ -510,7 +510,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			// so we check to see if it is an attribute name, and if so,
 			// we look it up in the schema
 			// see if we can find this attribute in the schema
-			string s(currCond->left->right->value);
+			SString s(currCond->left->right->value);
 			int leftIdx = schema.Index(s);
 			if (leftIdx != -1) {
 				andList[numAnds].operand2 = Left;
@@ -635,7 +635,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 		Type typeLeft;
 		Type typeRight;
 
-		string s(currCond->left->left->value);
+		SString s(currCond->left->left->value);
 		int leftIdx = leftSchema.Index(s);
 		if (leftIdx != -1) {
 			andList[numAnds].operand1 = Left;
@@ -649,7 +649,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 			typeRight = rightSchema.FindType(s);
 		}
 
-		s = currCond->left->right->value;
+		s = SString(currCond->left->right->value);
 		leftIdx = leftSchema.Index(s);
 		if (leftIdx != -1) {
 			andList[numAnds].operand2 = Left;
@@ -714,14 +714,14 @@ bool ConditionOnSchema(AndList& _cond, Schema& _schema) {
 	bool isGood = false;
 
 	if (_cond.left->left->code == NAME) {
-		string s(_cond.left->left->value);
+		SString s(_cond.left->left->value);
 		int leftIdx = _schema.Index(s);
 		if (leftIdx != -1) isGood = true;
 		else return false;
 	}
 
 	if (_cond.left->right->code == NAME) {
-		string s(_cond.left->right->value);
+		SString s(_cond.left->right->value);
 		int rightIdx = _schema.Index(s);
 		if (rightIdx != -1) isGood = true;
 		else return false;
@@ -734,7 +734,7 @@ bool ConditionOnSchemas(AndList& _cond, Schema& _schemaL, Schema& _schemaR) {
 	int sL = 0, sR = 0;
 
 	if (_cond.left->left->code == NAME) {
-		string s(_cond.left->left->value);
+		SString s(_cond.left->left->value);
 		int idx = _schemaL.Index(s);
 		if (idx != -1) sL += 1;
 		idx = _schemaR.Index(s);
@@ -744,7 +744,7 @@ bool ConditionOnSchemas(AndList& _cond, Schema& _schemaL, Schema& _schemaR) {
 	if (sL+sR != 1) return false;
 
 	if (_cond.left->right->code == NAME) {
-		string s(_cond.left->right->value);
+		SString s(_cond.left->right->value);
 		int idx = _schemaL.Index(s);
 		if (idx != -1) sL += 1;
 		idx = _schemaR.Index(s);

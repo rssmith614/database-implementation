@@ -5,9 +5,7 @@
 #include "Catalog.h"
 #include "ParseTree.h"
 #include "RelOp.h"
-
-#include <string>
-#include <vector>
+#include "Vector.cc"
 
 using namespace std;
 
@@ -15,9 +13,9 @@ using namespace std;
 // data structure used by the optimizer to compute join ordering
 struct OptimizationTree {
 	// list of tables joined up to this node
-	vector<string> tables;
+	StringVector tables;
 	// number of tuples in each of the tables (after selection predicates)
-	vector<int> tuples;
+	IntVector tuples;
 	// number of tuples at this node
 	int noTuples;
 

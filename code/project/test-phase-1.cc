@@ -1,4 +1,3 @@
-#include <vector>
 #include <string>
 #include <iostream>
 #include <cstdlib>
@@ -16,7 +15,7 @@ int main (int argc, char* argv[]) {
 		return -1;
 	}
 
-	string dbFile = argv[1];
+	SString dbFile(argv[1]);
 	int tNo = atoi(argv[2]);
 	int aNo = atoi(argv[3]);
 
@@ -27,39 +26,45 @@ int main (int argc, char* argv[]) {
 	////////////////////////////////
 	for (int i = 0; i < tNo; i++) {
 		char tN[20]; sprintf(tN, "T_%d", i);
-		string tName = tN;
+		SString tName(tN);
 
 		int taNo = (i+1) * aNo;
-		vector<string> atts;
-		vector<string> types;
+		StringVector atts;
+		StringVector types;
 		for (int j = 0; j < taNo; j++) {
 			char aN[20]; sprintf(aN, "A_%d_%d", i, j);
-			string aName = aN;
-			atts.push_back(aN);
+			SString aName(aN);
+			atts.Append(aName);
 
-			string aType;
+			SString aType;
 			int at = j % 3;
-			if (0 == at) aType = "INTEGER";
-			else if (1 == at) aType = "FLOAT";
-			else if (2 == at) aType = "STRING";
-			types.push_back(aType);
+			if (0 == at) aType = SString("INTEGER");
+			else if (1 == at) aType = SString("FLOAT");
+			else if (2 == at) aType = SString("STRING");
+			types.Append(aType);
 		}
+
+		cout << "CREATE TABLE " << tName << endl;
+		cout << atts << endl;
+		cout << types << endl;
 
 		bool ret = catalog.CreateTable(tName, atts, types);
 		if (true == ret) {
-			cout << "CREATE TABLE " << tName << " OK" << endl;
-
 			for (int j = 0; j < taNo; j++) {
-				unsigned int dist = (i+1) * 10 + j;
-				string aN = atts[j];
+				SInt dist = (i+1) * 10 + j;
+				cout << atts[j] << " distinct = " << dist << endl;
 				catalog.SetNoDistinct(tName, atts[j], dist);
 			}
 
-			unsigned int tuples = (i+1) * 1000;
+			SInt tuples = (i+1) * 1000;
+			cout << "tuples = " << tuples << endl;
 			catalog.SetNoTuples(tName, tuples);
 
-			string path = tName + ".dat";
-			catalog.SetDataFile(tName, path);
+			string path = tName; path = path + ".dat"; SString sp(path);
+			cout << "path = " << sp << endl;
+			catalog.SetDataFile(tName, sp);
+
+			cout << "CREATE TABLE " << tName << " OK" << endl;
 		}
 		else {
 			cout << "CREATE TABLE " << tName << " FAIL" << endl;
@@ -73,10 +78,12 @@ int main (int argc, char* argv[]) {
 
 
 	////////////////////////////////
-	vector<string> tables;
+	cout << "tables" << endl;
+
+	StringVector tables;
 	catalog.GetTables(tables);
-	for (vector<string>::iterator it = tables.begin(); it != tables.end(); it++) {
-		cout << *it << endl;
+	for (int i = 0; i < tables.Length(); i++) {
+		cout << tables[i] << endl;
 	}
 	cout << endl;
 
@@ -87,20 +94,20 @@ int main (int argc, char* argv[]) {
 
 		int r = rand() % tNo;
 		char tN[20]; sprintf(tN, "T_%d", r);
-		string tName = tN;
+		SString tName(tN);
 
-		unsigned int tuples = 0;
+		SInt tuples = 0;
 		catalog.GetNoTuples(tName, tuples);
 		cout << tName << " tuples = " << tuples << endl;
 
-		string path = ".";
+		SString path(".");
 		catalog.GetDataFile(tName, path);
 		cout << tName << " path = " << path << endl;
 
-		vector<string> atts;
+		StringVector atts;
 		catalog.GetAttributes(tName, atts);
-		for (vector<string>::iterator it = atts.begin(); it != atts.end(); it++) {
-			cout << *it << " ";
+		for (int i = 0; i < atts.Length(); i++) {
+			cout << atts[i] << " ";
 		}
 		cout << endl;
 
@@ -112,9 +119,9 @@ int main (int argc, char* argv[]) {
 		for (int j = 0; j < 2; j++) {
 			int s = rand() % ((r+1) * aNo);
 			char aN[20]; sprintf(aN, "A_%d_%d", r, s);
-			string aName = aN;
+			SString aName(aN);
 
-			unsigned int distinct;
+			SInt distinct = -1;
 			catalog.GetNoDistinct(tName, aName, distinct);
 			cout << tName << "." << aName << " distinct = " << distinct << endl;
 		}
@@ -124,7 +131,7 @@ int main (int argc, char* argv[]) {
 	////////////////////////////////
 	for (int i = 0; i < tNo/2; i++) {
 		char tN[20]; sprintf(tN, "T_%d", i);
-		string tName = tN;
+		SString tName(tN);
 
 		bool ret = catalog.DropTable(tName);
 		if (true == ret) {

@@ -2,13 +2,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <vector>
 
 #include "Config.h"
 #include "Swap.h"
-#include "Schema.h"
 #include "Record.h"
 #include "Comparison.h"
+#include "Schema.h"
 
 using namespace std;
 
@@ -67,8 +66,8 @@ int Record :: ExtractNextRecord (Schema& mySchema, FILE& textFile) {
 	delete [] bits;
 	bits = NULL;
 
-	unsigned int n = mySchema.GetNumAtts();
-	vector<Attribute> atts = mySchema.GetAtts();
+	SInt n = mySchema.GetNumAtts();
+	AttributeVector& atts = mySchema.GetAtts();
 
 	// this is the current position (int bytes) in the binary
 	// representation of the record that we are dealing with
@@ -401,8 +400,8 @@ void Record :: AppendRecords (Record& left, Record& right,
 }
 
 void Record :: print(ostream& _os, Schema& mySchema) {
-	int n = mySchema.GetNumAtts();
-	vector<Attribute> atts = mySchema.GetAtts();
+	SInt n = mySchema.GetNumAtts();
+	AttributeVector& atts = mySchema.GetAtts();
 
 	_os << '{';
 

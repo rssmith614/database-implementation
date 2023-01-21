@@ -38,6 +38,11 @@ Swapify <Type> :: CopyFrom (Swapify& _fromMe) {
 	data = _fromMe.data;
 }
 
+template <class Type> bool 
+Swapify <Type> :: operator== (const Swapify& _other) const {
+	return data == _other.data;
+}
+
 
 // redefine operator << for printing
 template <class Type> ostream&
