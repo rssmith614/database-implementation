@@ -10,7 +10,6 @@ endif
 init:
 	mkdir -p object
 	mkdir -p execs
-	mkdir -p project
 
 
 test-vector.out: test-vector.o
