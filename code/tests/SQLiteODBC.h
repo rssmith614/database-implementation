@@ -1,6 +1,7 @@
 // STEP: Include required headers
 #include "sqlite3.h"
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 
 #include "Swapify.h"
@@ -797,15 +798,144 @@ public:
     }
 
     void PCsByMaker(SString& _maker) {
+        cout << "++++++++++++++++++++++++++++++++++\n";
+        cout << "PCs by maker: " << _maker << endl;
 
+        string stmt =
+            "select P.model as model, PC.price as price \
+            from Product P, PC \
+            where P.model = PC.model AND \
+            maker = ?";
+        int rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+        if (rc != SQLITE_OK) {
+            cout << "Cannot compile statment " << stmt << endl;
+            cout << "The error is: " << sqlite3_errmsg(db) << endl;
+            exit(1);
+        }
+
+        string st = _maker;
+        sqlite3_bind_text(stmt_handle, 1, st.c_str(), st.length(), 0);
+
+        cout << setw(10) << right << "model" << setw(10) << right << "price" << endl;
+        cout << "-------------------------------\n";
+
+        while (true) {
+            rc = sqlite3_step(stmt_handle);
+            if (rc == SQLITE_DONE) break;
+            if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
+                cout << "Cannot execute statment " << stmt << endl;
+                cout << "The error is: " << sqlite3_errmsg(db) << endl;
+                exit(1);
+            }
+            int model = sqlite3_column_int(stmt_handle, 0);
+            int price = sqlite3_column_int(stmt_handle, 1);
+
+            cout << setw(10) << right << model << setw(10) << right << price << endl;
+        }
+        sqlite3_finalize(stmt_handle);
+
+        cout << "++++++++++++++++++++++++++++++++++\n";
     }
 
     void ProductByMaker(SString& _pType, SString& _maker) {
+        cout << "++++++++++++++++++++++++++++++++++\n";
+        cout << _pType << " by maker: " << _maker << endl;
 
+        string stmt =
+            "select P.model as model, " +
+            string(_pType)  + ".price as price " +
+            "from Product P, " + string(_pType) +
+            " where P.model = " + string(_pType) + ".model AND " +
+            "maker = ?";
+        int rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+        if (rc != SQLITE_OK) {
+            cout << "Cannot compile statment " << stmt << endl;
+            cout << "The error is: " << sqlite3_errmsg(db) << endl;
+            exit(1);
+        }
+
+        string st = _maker;
+        sqlite3_bind_text(stmt_handle, 1, st.c_str(), st.length(), 0);
+
+        cout << setw(10) << right << "model" << setw(10) << right << "price" << endl;
+        cout << "-------------------------------\n";
+
+        while (true) {
+            rc = sqlite3_step(stmt_handle);
+            if (rc == SQLITE_DONE) break;
+            if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
+                cout << "Cannot execute statment " << stmt << endl;
+                cout << "The error is: " << sqlite3_errmsg(db) << endl;
+                exit(1);
+            }
+            int model = sqlite3_column_int(stmt_handle, 0);
+            int price = sqlite3_column_int(stmt_handle, 1);
+
+            cout << setw(10) << right << model << setw(10) << right << price << endl;
+        }
+        sqlite3_finalize(stmt_handle);
+
+        cout << "++++++++++++++++++++++++++++++++++\n";
     }
 
     void AllProductsByMaker(SString& _maker) {
+        cout << "++++++++++++++++++++++++++++++++++\n";
+        cout << "Products by maker: " << _maker << endl;
+
+        string stmt =
+            "select P.model as model, P.type as type, PC.price as price \
+            from Product P, PC \
+            where P.model = PC.model AND \
+            maker = ?";
+
+        stmt += " UNION ";
+
+        stmt +=
+            "select P.model as model, P.type as type, L.price as price \
+            from Product P, Laptop L \
+            where P.model = L.model AND \
+            maker = ?";
         
+        stmt += " UNION ";
+
+        stmt +=
+            "select P.model as model, P.type as type, Pr.price as price \
+            from Product P, Printer Pr \
+            where P.model = Pr.model AND \
+            maker = ?";
+
+        int rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+        if (rc != SQLITE_OK) {
+            cout << "Cannot compile statment " << stmt << endl;
+            cout << "The error is: " << sqlite3_errmsg(db) << endl;
+            exit(1);
+        }
+
+        string st = _maker;
+        sqlite3_bind_text(stmt_handle, 1, st.c_str(), st.length(), 0);
+        sqlite3_bind_text(stmt_handle, 2, st.c_str(), st.length(), 0);
+        sqlite3_bind_text(stmt_handle, 3, st.c_str(), st.length(), 0);
+
+        cout << setw(10) << right << "model" << setw(20) << right << "type" << setw(10) << right << "price" << endl;
+        cout << "-------------------------------\n";
+
+        while (true) {
+            rc = sqlite3_step(stmt_handle);
+            if (rc == SQLITE_DONE) break;
+            if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
+                cout << "Cannot execute statment " << stmt << endl;
+                cout << "The error is: " << sqlite3_errmsg(db) << endl;
+                exit(1);
+            }
+            int model = sqlite3_column_int(stmt_handle, 0);
+    		string type = reinterpret_cast<const char*>(sqlite3_column_text(stmt_handle, 1));
+            int price = sqlite3_column_int(stmt_handle, 2);
+
+            cout << setw(10) << right << model << setw(20) << right << type << setw(10) << right << price << endl;
+        }
+        sqlite3_finalize(stmt_handle);
+
+        cout << "++++++++++++++++++++++++++++++++++\n";        
     }
 };
 
