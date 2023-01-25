@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <unordered_map>
 #include "sqlite3.h"
 
 #include "Schema.h"
@@ -17,6 +18,16 @@ protected:
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
 	 */
+	string filename;
+	sqlite3* db;
+	sqlite3_stmt* stmt_handle = 0;
+	const char *stmt_leftover = 0;
+	StringVector attributes;
+	unordered_map<string, Schema> schema_map;
+	unordered_map<string, pair<int, string> > table_map;
+
+	char buffer[10000];
+	bool dirty;
 
 public:
 	/* Catalog constructor.
