@@ -31,10 +31,10 @@ test-map.o: tests/test-map.cc headers/Map.h headers/Map.cc headers/Swapify.h hea
 	$(CC) -o object/test-map.o -c tests/test-map.cc -I headers/
 
 test-sqlite.out: test-sqlite.o
-	$(CC) -o execs/test-sqlite.out object/test-sqlite.o  -lsqlite3
+	$(CC) -o execs/test-sqlite.out object/test-sqlite.o -lsqlite3
 
-test-sqlite.o: tests/test-sqlite.cc tests/SQLiteODBC.h headers/Swapify.h headers/Swapify.cc
-	$(CC) -o object/test-sqlite.o -c tests/test-sqlite.cc -I headers/ -I tests/
+test-sqlite.o: tests/test-sqlite.cc headers/Swapify.h headers/Swapify.cc
+	$(CC) -o object/test-sqlite.o -c tests/test-sqlite.cc -I headers/
 
 tests: test-vector.out test-list.out test-map.out test-sqlite.out
 
