@@ -18,9 +18,9 @@ int main (int argc, char* argv[]) {
 	
 	sj.OpenConnection();
 
-	//sj.DropTables();
-	//sj.CreateTables();
-	//sj.PopulateTables();
+	sj.DropTables();
+	sj.CreateTables();
+	sj.PopulateTables();
 
 	SString maker("A"), product("Laptop");
 

@@ -1,4 +1,4 @@
-CC = g++ -g -O0 -Wno-deprecated
+CC = g++ -g -O0 -Wno-deprecated -Wno-c++11-extensions
 
 tag = -i
 
@@ -120,3 +120,4 @@ clean:
 	rm -f source/QueryLexer.c
 	rm -f source/QueryParser.c
 	rm -f headers/QueryParser.h
+	rm -f catalog.sqlite

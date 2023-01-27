@@ -4,9 +4,11 @@
 #include <iostream>
 #include <cstdio>
 #include <unordered_map>
+#include <unordered_set>
 #include "sqlite3.h"
 
 #include "Schema.h"
+#include "Config.h"
 
 using namespace std;
 
@@ -26,7 +28,7 @@ protected:
 	unordered_map<string, Schema> schema_map;
 	unordered_map<string, pair<int, string> > table_map;
 
-	char buffer[10000];
+	char buffer[PIPE_BUFFERSIZE];
 	bool dirty;
 
 public:
