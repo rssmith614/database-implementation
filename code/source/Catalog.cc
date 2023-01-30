@@ -12,7 +12,7 @@ static int readTables(void* data, int argc, char** argv, char** azColName) {
 	string path = argv[2];
 
 	// each entry looks like {tName: {noTuples, path}}
-	static_cast<unordered_map<string, pair<int, string> >*>(data)->insert(make_pair(tName, make_pair(noTuples, path)));
+	static_cast<map<string, pair<int, string> >*>(data)->insert(make_pair(tName, make_pair(noTuples, path)));
 
 	return 0;
 }
@@ -91,14 +91,6 @@ Catalog::Catalog(SString& _fileName) {
 	} else {
 		// cout << "attributes select ok" << endl;
 	}
-
-	for (auto it = table_map.begin(); it != table_map.end(); it++) {
-		cout << it->first << ": " << it->second.first << ", " << it->second.second << endl;
-	}
-
-	for (auto it = schema_map.begin(); it != schema_map.end(); it++) {
-		cout << it->first << ": " << it->second << endl;
-	}
 }
 
 Catalog::~Catalog() {
@@ -176,6 +168,10 @@ void Catalog::SetNoDistinct(SString& _table, SString& _attribute, SInt& _noDisti
 
 void Catalog::GetTables(StringVector& _tables) {
 
+	for (auto table : table_map) {
+		SString tName(table.first);
+		_tables.Append(tName);
+	}
 }
 
 bool Catalog::GetAttributes(SString& _table, StringVector& _attributes) {
@@ -254,6 +250,8 @@ bool Catalog::CreateTable(SString& _table, StringVector& _attributes,
 
 	// save schema info in memory
 	IntVector numDistinct;
+	SInt zero = 0;
+	numDistinct.Append(zero);
 	Schema newSchema = Schema(_attributes, _attributeTypes, numDistinct);
 	schema_map.insert(make_pair((string) _table, newSchema));
 
@@ -277,6 +275,28 @@ bool Catalog::DropTable(SString& _table) {
 }
 
 ostream& operator<<(ostream& _os, Catalog& _c) {
+
+	for (auto table : _c.table_map) {
+		_os << table.first << '\t' << table.second.first << '\t' << table.second.second << '\n';
+		auto get = _c.schema_map.find(table.first);
+		Schema schema = get->second;
+		AttributeVector& atts = schema.GetAtts();
+		for (int i=0; i < schema.GetNumAtts(); i++) {
+			string att_type;
+			switch (atts[i].type) {
+				case Integer:
+					att_type = "Integer";
+					break;
+				case Float:
+					att_type = "Float";
+					break;
+				case String:
+					att_type = "String";
+					break;
+			}
+			_os << "|_\t" << atts[i].name << '\t' << att_type << '\t' << atts[i].noDistinct << '\n';
+		}
+	}
 
 	return _os;
 }
