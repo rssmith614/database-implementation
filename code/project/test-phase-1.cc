@@ -129,18 +129,18 @@ int main (int argc, char* argv[]) {
 
 
 	////////////////////////////////
-	// for (int i = 0; i < tNo/2; i++) {
-	// 	char tN[20]; sprintf(tN, "T_%d", i);
-	// 	SString tName(tN);
+	for (int i = 0; i < tNo/2; i++) {
+		char tN[20]; sprintf(tN, "T_%d", i);
+		SString tName(tN);
 
-	// 	bool ret = catalog.DropTable(tName);
-	// 	if (true == ret) {
-	// 		cout << "DROP TABLE " << tName << " OK" << endl;
-	// 	}
-	// 	else {
-	// 		cout << "DROP TABLE " << tName << " FAIL" << endl;
-	// 	}
-	// }
+		bool ret = catalog.DropTable(tName);
+		if (true == ret) {
+			cout << "DROP TABLE " << tName << " OK" << endl;
+		}
+		else {
+			cout << "DROP TABLE " << tName << " FAIL" << endl;
+		}
+	}
 
 	return 0;
 }

@@ -143,25 +143,24 @@ bool Catalog::Save() {
 
 		const char type_strings[4][10] = {"Integer", "Float", "String", "Name"};
 		for (auto table : table_map) {
-			stmt = "INSERT INTO Attributes VALUES(?, ?, ?, ?, ?);";
-			rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
-			if (rc != SQLITE_OK){
-				cout << "not ok" << stmt << endl;
-				cout << "error is" << sqlite3_errmsg(db) << endl;
-				exit(1);
-			}
-
 			auto get = schema_map.find(table.first);
 			Schema schema = get->second;
 			AttributeVector& atts = schema.GetAtts();
 			for(int i = 0; i < schema.GetNumAtts(); i++){
+				stmt = "INSERT INTO Attributes VALUES(?, ?, ?, ?, ?);";
+				rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+				if (rc != SQLITE_OK){
+					cout << "not ok" << stmt << endl;
+					cout << "error is" << sqlite3_errmsg(db) << endl;
+					exit(1);
+				}
 				string att_type = type_strings[atts[i].type];
 				sqlite3_reset(stmt_handle);
 				sqlite3_clear_bindings(stmt_handle);
 				sqlite3_bind_text(stmt_handle, 1, ((string)atts[i].name).c_str(), -1, 0);
 				sqlite3_bind_int(stmt_handle, 2, i);
 				sqlite3_bind_text(stmt_handle, 3, att_type.c_str(), -1, 0);
-				sqlite3_bind_int(stmt_handle, 4, atts[i].noDistinct);
+				sqlite3_bind_int(stmt_handle, 4, (int)atts[i].noDistinct);
 				sqlite3_bind_text(stmt_handle, 5, it1->first.c_str(), -1, 0);
 				rc = sqlite3_step(stmt_handle);
 				if (rc != SQLITE_DONE){
@@ -170,6 +169,8 @@ bool Catalog::Save() {
 					exit(1);
 				}
 				sqlite3_finalize(stmt_handle);	
+			
+				
 			}
 			//name VARCHAR, position INT, type VARCHAR, noDistinct INT, tablename VARCHAR
 			
@@ -196,7 +197,14 @@ bool Catalog::GetNoTuples(SString& _table, SInt& _noTuples) {
 }
 
 void Catalog::SetNoTuples(SString& _table, SInt& _noTuples) {
-
+	// ensure table exists
+	auto get = table_map.find(_table);
+	if (get != table_map.end()) {
+		// recall {name: {noTuples, path}} structure
+		get->second.first = _noTuples;
+	} else {
+		cerr << "Error: table " << _table << " not found";
+	}
 }
 
 bool Catalog::GetDataFile(SString& _table, SString& _path) {
@@ -215,6 +223,14 @@ bool Catalog::GetDataFile(SString& _table, SString& _path) {
 }
 
 void Catalog::SetDataFile(SString& _table, SString& _path) {
+		// ensure table exists
+	auto get = table_map.find(_table);
+	if (get != table_map.end()) {
+		// recall {name: {noTuples, path}} structure
+		get->second.second = _path;
+	} else {
+		cerr << "Error: table " << _table << " not found";
+	}
 
 }
 
@@ -232,7 +248,13 @@ bool Catalog::GetNoDistinct(SString& _table, SString& _attribute, SInt& _noDisti
 }
 
 void Catalog::SetNoDistinct(SString& _table, SString& _attribute, SInt& _noDistinct) {
-
+	
+	auto get = schema_map.find(_table);
+	if (get != schema_map.end()) {
+		get->second.SetDistincts(_attribute, _noDistinct);	
+	} else {
+		cerr << "Error: table " << _table << " not found" << endl;
+	}
 }
 
 void Catalog::GetTables(StringVector& _tables) {
