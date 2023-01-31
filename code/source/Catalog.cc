@@ -82,6 +82,7 @@ Catalog::Catalog(SString& _fileName) {
 		// cout << "tables select ok" << endl;
 	}
 
+
 	stmt = "SELECT * FROM Attributes ORDER BY position;";
 	rc = sqlite3_exec(db, stmt.c_str(), readAttributes, (void*)&(schema_map), &errMsg);
 
@@ -91,6 +92,7 @@ Catalog::Catalog(SString& _fileName) {
 	} else {
 		// cout << "attributes select ok" << endl;
 	}
+
 
 	for (auto it = table_map.begin(); it != table_map.end(); it++) {
 		cout << it->first << ": " << it->second.first << ", " << it->second.second << endl;
@@ -107,12 +109,80 @@ Catalog::~Catalog() {
 }
 
 bool Catalog::Save() {
+	
+	string stmt;
+	int rc;
+	char* errMsg;
+	stmt = "DELETE FROM Tables";
+	rc = sqlite3_exec(db, stmt.c_str(), readTables, (void*)&(table_map), &errMsg);
 
-	if (!dirty) {
-		return false;
+	if (rc != SQLITE_OK) {
+		sqlite3_free(errMsg);
 	}
 
-	for (auto i = schema_map.begin(); i != schema_map.end(); i++) {
+	stmt = "DELETE FROM Attributes;";
+	rc = sqlite3_exec(db, stmt.c_str(), readAttributes, (void*)&(schema_map), &errMsg);
+	
+	if (rc != SQLITE_OK) {
+		cerr << errMsg << endl;
+		sqlite3_free(errMsg);
+	}
+
+
+	for (auto it1 = table_map.begin(); it1 != table_map.end(); it1++) {
+		stmt = "INSERT INTO Tables VALUES(?, ?, ?);";
+		rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+		if (rc != SQLITE_OK){
+			cout << "not ok" << stmt << endl;
+			cout << "error is" << sqlite3_errmsg(db) << endl;
+			exit(1);
+		}
+		sqlite3_reset(stmt_handle);
+		sqlite3_clear_bindings(stmt_handle);
+		sqlite3_bind_text(stmt_handle, 1, it1->first.c_str(), -1, 0);
+		sqlite3_bind_int(stmt_handle, 2, it1->second.first);
+		sqlite3_bind_text(stmt_handle, 3, it1->second.second.c_str(), -1, 0);
+		rc = sqlite3_step(stmt_handle);
+		if (rc != SQLITE_DONE){
+			cout << "not done" << stmt << endl;
+			cout << "error is" << sqlite3_errmsg(db) << endl;
+			exit(1);
+		}
+		sqlite3_finalize(stmt_handle);
+
+		const char type_strings[4][10] = {"Integer", "Float", "String", "Name"};
+		for (auto table : table_map) {
+			stmt = "INSERT INTO Attributes VALUES(?, ?, ?, ?, ?);";
+			rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+			if (rc != SQLITE_OK){
+				cout << "not ok" << stmt << endl;
+				cout << "error is" << sqlite3_errmsg(db) << endl;
+				exit(1);
+			}
+
+			auto get = schema_map.find(table.first);
+			Schema schema = get->second;
+			AttributeVector& atts = schema.GetAtts();
+			for(int i = 0; i < schema.GetNumAtts(); i++){
+				string att_type = type_strings[atts[i].type];
+				sqlite3_reset(stmt_handle);
+				sqlite3_clear_bindings(stmt_handle);
+				sqlite3_bind_text(stmt_handle, 1, ((string)atts[i].name).c_str(), -1, 0);
+				sqlite3_bind_int(stmt_handle, 2, i);
+				sqlite3_bind_text(stmt_handle, 3, att_type.c_str(), -1, 0);
+				sqlite3_bind_int(stmt_handle, 4, atts[i].noDistinct);
+				sqlite3_bind_text(stmt_handle, 5, it1->first.c_str(), -1, 0);
+				rc = sqlite3_step(stmt_handle);
+				if (rc != SQLITE_DONE){
+					cout << "not done" << stmt << endl;
+					cout << "error is" << sqlite3_errmsg(db) << endl;
+					exit(1);
+				}
+				sqlite3_finalize(stmt_handle);	
+			}
+			//name VARCHAR, position INT, type VARCHAR, noDistinct INT, tablename VARCHAR
+			
+		}
 
 	}
 
