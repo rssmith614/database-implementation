@@ -15,7 +15,7 @@ static int readTables(void* data, int argc, char** argv, char** azColName) {
 	static_cast<map<string, pair<int, string> >*>(data)->insert(make_pair(tName, make_pair(noTuples, path)));
 
 	return 0;
-}
+} 
 
 static int readAttributes(void* data, int argc, char** argv, char** azColName) {
 	StringVector attributes;
@@ -53,8 +53,9 @@ static int readAttributes(void* data, int argc, char** argv, char** azColName) {
 Catalog::Catalog(SString& _fileName) {
 	filename = _fileName;
 	int rc = sqlite3_open(((string) _fileName).c_str(), &(db));
-	if (rc == SQLITE_OK)
-		cout << "opened database " << _fileName << endl;
+	if (rc != SQLITE_OK) {
+		cout << "unable to open database " << _fileName << endl;
+	}
 
 	string stmt = "CREATE TABLE IF NOT EXISTS Tables (name VARCHAR, noTuples INT, path VARCHAR);";
 	char* errMsg;
@@ -78,10 +79,7 @@ Catalog::Catalog(SString& _fileName) {
 
 	if (rc != SQLITE_OK) {
 		sqlite3_free(errMsg);
-	} else {
-		// cout << "tables select ok" << endl;
 	}
-
 
 	stmt = "SELECT * FROM Attributes ORDER BY position;";
 	rc = sqlite3_exec(db, stmt.c_str(), readAttributes, (void*)&(schema_map), &errMsg);
@@ -89,8 +87,6 @@ Catalog::Catalog(SString& _fileName) {
 	if (rc != SQLITE_OK) {
 		cerr << errMsg << endl;
 		sqlite3_free(errMsg);
-	} else {
-		// cout << "attributes select ok" << endl;
 	}
 }
 
@@ -100,6 +96,10 @@ Catalog::~Catalog() {
 }
 
 bool Catalog::Save() {
+
+	if (!dirty) {
+		return false;
+	}
 	
 	string stmt;
 	int rc;
@@ -167,10 +167,7 @@ bool Catalog::Save() {
 				cout << "error is" << sqlite3_errmsg(db) << endl;
 				exit(1);
 			}
-			sqlite3_finalize(stmt_handle);	
-			
-			//name VARCHAR, position INT, type VARCHAR, noDistinct INT, tablename VARCHAR
-			
+			sqlite3_finalize(stmt_handle);			
 		}
 
 	}
@@ -199,6 +196,7 @@ void Catalog::SetNoTuples(SString& _table, SInt& _noTuples) {
 	if (get != table_map.end()) {
 		// recall {name: {noTuples, path}} structure
 		get->second.first = _noTuples;
+		dirty = true;
 	} else {
 		cerr << "Error: table " << _table << " not found";
 	}
@@ -220,11 +218,13 @@ bool Catalog::GetDataFile(SString& _table, SString& _path) {
 }
 
 void Catalog::SetDataFile(SString& _table, SString& _path) {
-		// ensure table exists
+
+	// ensure table exists
 	auto get = table_map.find(_table);
 	if (get != table_map.end()) {
 		// recall {name: {noTuples, path}} structure
 		get->second.second = _path;
+		dirty = true;
 	} else {
 		cerr << "Error: table " << _table << " not found";
 	}
@@ -248,7 +248,8 @@ void Catalog::SetNoDistinct(SString& _table, SString& _attribute, SInt& _noDisti
 	
 	auto get = schema_map.find(_table);
 	if (get != schema_map.end()) {
-		get->second.SetDistincts(_attribute, _noDistinct);	
+		get->second.SetDistincts(_attribute, _noDistinct);
+		dirty = true;
 	} else {
 		cerr << "Error: table " << _table << " not found" << endl;
 	}
@@ -268,12 +269,10 @@ bool Catalog::GetAttributes(SString& _table, StringVector& _attributes) {
 	auto get = schema_map.find(_table);
 	if (get != schema_map.end()) {
 		// build a StringVector from the names of the table's attributes
-		StringVector result;
 		for (int i=0; i < get->second.GetAtts().Length(); i++) {
 			SString att(get->second.GetAtts()[i].name);
-			result.Append(att);
+			_attributes.Append(att);
 		}
-		_attributes.CopyFrom(result);
 	} else {
 		cerr << "Error: table " << _table << " not found";
 		return false;
@@ -364,24 +363,14 @@ bool Catalog::DropTable(SString& _table) {
 
 ostream& operator<<(ostream& _os, Catalog& _c) {
 
+	const char type_strings[4][10] = {"Integer", "Float", "String", "Name"};
 	for (auto table : _c.table_map) {
 		_os << table.first << '\t' << table.second.first << '\t' << table.second.second << '\n';
 		auto get = _c.schema_map.find(table.first);
 		Schema schema = get->second;
 		AttributeVector& atts = schema.GetAtts();
 		for (int i=0; i < schema.GetNumAtts(); i++) {
-			string att_type;
-			switch (atts[i].type) {
-				case Integer:
-					att_type = "Integer";
-					break;
-				case Float:
-					att_type = "Float";
-					break;
-				case String:
-					att_type = "String";
-					break;
-			}
+			string att_type = type_strings[atts[i].type];
 			_os << "|_\t" << atts[i].name << '\t' << att_type << '\t' << atts[i].noDistinct << '\n';
 		}
 	}
