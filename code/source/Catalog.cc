@@ -142,36 +142,33 @@ bool Catalog::Save() {
 		sqlite3_finalize(stmt_handle);
 
 		const char type_strings[4][10] = {"Integer", "Float", "String", "Name"};
-		for (auto table : table_map) {
-			auto get = schema_map.find(table.first);
-			Schema schema = get->second;
-			AttributeVector& atts = schema.GetAtts();
-			for(int i = 0; i < schema.GetNumAtts(); i++){
-				stmt = "INSERT INTO Attributes VALUES(?, ?, ?, ?, ?);";
-				rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
-				if (rc != SQLITE_OK){
-					cout << "not ok" << stmt << endl;
-					cout << "error is" << sqlite3_errmsg(db) << endl;
-					exit(1);
-				}
-				string att_type = type_strings[atts[i].type];
-				sqlite3_reset(stmt_handle);
-				sqlite3_clear_bindings(stmt_handle);
-				sqlite3_bind_text(stmt_handle, 1, ((string)atts[i].name).c_str(), -1, 0);
-				sqlite3_bind_int(stmt_handle, 2, i);
-				sqlite3_bind_text(stmt_handle, 3, att_type.c_str(), -1, 0);
-				sqlite3_bind_int(stmt_handle, 4, (int)atts[i].noDistinct);
-				sqlite3_bind_text(stmt_handle, 5, it1->first.c_str(), -1, 0);
-				rc = sqlite3_step(stmt_handle);
-				if (rc != SQLITE_DONE){
-					cout << "not done" << stmt << endl;
-					cout << "error is" << sqlite3_errmsg(db) << endl;
-					exit(1);
-				}
-				sqlite3_finalize(stmt_handle);	
-			
-				
+		auto get = schema_map.find(it1->first);
+		Schema schema = get->second;
+		AttributeVector& atts = schema.GetAtts();
+		for(int i = 0; i < schema.GetNumAtts(); i++){
+			stmt = "INSERT INTO Attributes VALUES(?, ?, ?, ?, ?);";
+			rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+			if (rc != SQLITE_OK){
+				cout << "not ok" << stmt << endl;
+				cout << "error is" << sqlite3_errmsg(db) << endl;
+				exit(1);
 			}
+			string att_type = type_strings[atts[i].type];
+			sqlite3_reset(stmt_handle);
+			sqlite3_clear_bindings(stmt_handle);
+			sqlite3_bind_text(stmt_handle, 1, ((string)atts[i].name).c_str(), -1, 0);
+			sqlite3_bind_int(stmt_handle, 2, i);
+			sqlite3_bind_text(stmt_handle, 3, att_type.c_str(), -1, 0);
+			sqlite3_bind_int(stmt_handle, 4, (int)atts[i].noDistinct);
+			sqlite3_bind_text(stmt_handle, 5, it1->first.c_str(), -1, 0);
+			rc = sqlite3_step(stmt_handle);
+			if (rc != SQLITE_DONE){
+				cout << "not done" << stmt << endl;
+				cout << "error is" << sqlite3_errmsg(db) << endl;
+				exit(1);
+			}
+			sqlite3_finalize(stmt_handle);	
+			
 			//name VARCHAR, position INT, type VARCHAR, noDistinct INT, tablename VARCHAR
 			
 		}

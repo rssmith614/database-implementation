@@ -89,43 +89,43 @@ int main (int argc, char* argv[]) {
 
 
 	// ////////////////////////////////
-	// for (int i = 0; i < 10; i++) {
-	// 	cout << i << "+++++++++++++" << endl;
+	for (int i = 0; i < 10; i++) {
+		cout << i << "+++++++++++++" << endl;
 
-	// 	int r = rand() % tNo;
-	// 	char tN[20]; sprintf(tN, "T_%d", r);
-	// 	SString tName(tN);
+		int r = rand() % tNo;
+		char tN[20]; sprintf(tN, "T_%d", r);
+		SString tName(tN);
 
-	// 	SInt tuples = 0;
-	// 	catalog.GetNoTuples(tName, tuples);
-	// 	cout << tName << " tuples = " << tuples << endl;
+		SInt tuples = 0;
+		catalog.GetNoTuples(tName, tuples);
+		cout << tName << " tuples = " << tuples << endl;
 
-	// 	SString path(".");
-	// 	catalog.GetDataFile(tName, path);
-	// 	cout << tName << " path = " << path << endl;
+		SString path(".");
+		catalog.GetDataFile(tName, path);
+		cout << tName << " path = " << path << endl;
 
-	// 	StringVector atts;
-	// 	catalog.GetAttributes(tName, atts);
-	// 	for (int i = 0; i < atts.Length(); i++) {
-	// 		cout << atts[i] << " ";
-	// 	}
-	// 	cout << endl;
+		StringVector atts;
+		catalog.GetAttributes(tName, atts);
+		for (int i = 0; i < atts.Length(); i++) {
+			cout << atts[i] << " ";
+		}
+		cout << endl;
 
-	// 	Schema schema;
-	// 	catalog.GetSchema(tName, schema);
-	// 	cout << schema << endl;
+		Schema schema;
+		catalog.GetSchema(tName, schema);
+		cout << schema << endl;
 
-	// 	////////////////////////////////
-	// 	for (int j = 0; j < 2; j++) {
-	// 		int s = rand() % ((r+1) * aNo);
-	// 		char aN[20]; sprintf(aN, "A_%d_%d", r, s);
-	// 		SString aName(aN);
+		////////////////////////////////
+		for (int j = 0; j < 2; j++) {
+			int s = rand() % ((r+1) * aNo);
+			char aN[20]; sprintf(aN, "A_%d_%d", r, s);
+			SString aName(aN);
 
-	// 		SInt distinct = -1;
-	// 		catalog.GetNoDistinct(tName, aName, distinct);
-	// 		cout << tName << "." << aName << " distinct = " << distinct << endl;
-	// 	}
-	// }
+			SInt distinct = -1;
+			catalog.GetNoDistinct(tName, aName, distinct);
+			cout << tName << "." << aName << " distinct = " << distinct << endl;
+		}
+	}
 
 
 	////////////////////////////////
