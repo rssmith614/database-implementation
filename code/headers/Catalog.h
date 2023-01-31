@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include "sqlite3.h"
@@ -26,7 +27,7 @@ protected:
 	const char *stmt_leftover = 0;
 	StringVector attributes;
 	unordered_map<string, Schema> schema_map;
-	unordered_map<string, pair<int, string> > table_map;
+	map<string, pair<int, string> > table_map;
 
 	char buffer[PIPE_BUFFERSIZE];
 	bool dirty;
