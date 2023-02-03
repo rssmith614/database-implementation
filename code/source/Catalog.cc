@@ -342,6 +342,7 @@ bool Catalog::CreateTable(SString& _table, StringVector& _attributes,
 	Schema newSchema = Schema(_attributes, _attributeTypes, numDistinct);
 	schema_map.insert(make_pair((string) _table, newSchema));
 
+	dirty = true;
 	return true;
 }
 
@@ -358,6 +359,7 @@ bool Catalog::DropTable(SString& _table) {
 		return false;
 	}
 
+	dirty = true;
 	return true;
 }
 
