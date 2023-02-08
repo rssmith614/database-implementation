@@ -1,6 +1,10 @@
+-- SQL statements can have one of two signatures
+-- CAPS are terminal statements, others are non-terminals, must be defined recursively
 SQL ::= SELECT SelectAtts FROM Tables WHERE AndList |
         SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts 
 
+-- recursive definition of non-terminal Tables
+-- YY_NAME is a terminal
 Tables ::= YY_NAME | Tables ',' YY_NAME
 
 SelectAtts ::= Function ',' Atts | Function | Atts | DISTINCT Atts 

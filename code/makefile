@@ -1,4 +1,4 @@
-CC = g++ -g -O0 -Wno-deprecated -Wno-c++11-extensions
+CC = g++ -g -O0 -Wno-deprecated -Wno-c++11-extensions -mmacosx-version-min=13.1
 
 tag = -i
 
