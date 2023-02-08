@@ -10,11 +10,6 @@ ostream& operator<<(ostream& _os, RelationalOp& _op) {
 
 
 Scan::Scan(Schema& _schema, DBFile& _file, string _tblName) {
-  schema = _schema;
-  file = _file;
-  tblName = _tblName;
-  
-  file.MoveFirst();
 }
 
 Scan::~Scan() {
@@ -22,9 +17,6 @@ Scan::~Scan() {
 }
 
 bool Scan::GetNext(Record& _record) {
-	int ret = file.GetNext(_record);
-	if (1 == ret) return true;
-
 	return false;
 }
 
@@ -36,10 +28,6 @@ ostream& Scan::print(ostream& _os) {
 
 Select::Select(Schema& _schema, CNF& _predicate, Record& _constants,
 	RelationalOp* _producer) {
-  schema = _schema;
-  predicate = _predicate;
-  constants = _constants;
-  producer = _producer;
 }
 
 Select::~Select() {
@@ -47,12 +35,7 @@ Select::~Select() {
 }
 
 bool Select::GetNext(Record& _record) {
-	while (true) {
-		bool ret = producer->GetNext(_record);
-		if (false == ret) return false;
-
-		if (true == predicate.Run(_record, constants)) return true;
-	}
+	return false;	
 }
 
 ostream& Select::print(ostream& _os) {
@@ -68,6 +51,10 @@ Project::Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
 
 Project::~Project() {
 
+}
+
+bool Project::GetNext(Record& _record) {
+	return false;
 }
 
 ostream& Project::print(ostream& _os) {
@@ -110,6 +97,10 @@ DuplicateRemoval::~DuplicateRemoval() {
 
 }
 
+bool DuplicateRemoval::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& DuplicateRemoval::print(ostream& _os) {
 	return _os << "DISTINCT";
 }
@@ -122,6 +113,10 @@ Sum::Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
 
 Sum::~Sum() {
 
+}
+
+bool Sum::GetNext(Record& _record) {
+	return false;
 }
 
 ostream& Sum::print(ostream& _os) {
@@ -138,6 +133,10 @@ GroupBy::~GroupBy() {
 
 }
 
+bool GroupBy::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& GroupBy::print(ostream& _os) {
 	return _os << "GROUP BY";
 }
@@ -151,10 +150,17 @@ WriteOut::~WriteOut() {
 
 }
 
+bool WriteOut::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& WriteOut::print(ostream& _os) {
 	return _os << "OUTPUT";
 }
 
+
+void QueryExecutionTree::ExecuteQuery() {
+}
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
 	return _os << "QUERY EXECUTION TREE";

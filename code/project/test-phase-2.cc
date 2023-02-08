@@ -7,7 +7,6 @@
 extern "C" {
 #include "QueryParser.h"
 }
-#include "QueryOptimizer.h"
 #include "QueryCompiler.h"
 #include "Record.h"
 #include "RelOp.h"
@@ -35,13 +34,9 @@ int main () {
 	SString dbFile("catalog.sqlite");
 	Catalog catalog(dbFile);
 
-	// this is the query optimizer
-	// it is not invoked directly but rather passed to the query compiler
-	QueryOptimizer optimizer(catalog);
-
 	// this is the query compiler
 	// it includes the catalog and the query optimizer
-	QueryCompiler compiler(catalog, optimizer);
+	QueryCompiler compiler(catalog);
 
 
 	// the query parser is accessed directly through yyparse
