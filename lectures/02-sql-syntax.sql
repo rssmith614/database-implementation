@@ -20,6 +20,7 @@ AndList ::= Condition | Condition AND AndList
 Condition ::= Literal BoolComp Literal 
 
 
+
 TableList* tables = {}; // the list of tables in the query
 AndList* predicate = {}; // the predicate in WHERE
 NameList* attsToSelect = {}; // the attributes in SELECT
