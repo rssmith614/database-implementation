@@ -39,14 +39,23 @@ typedef Vector<Attribute> AttributeVector;
  */
 class Schema {
 private:
+	// number of tuples
+	SInt noTuples;
+	// path to data file
+	SString fPath;
 	// attributes in schema
 	AttributeVector atts;
 
 public:
 	// default constructor
-	Schema() {}
-	// full constructor
+	Schema();
+	// table constructor
+	Schema(SInt& _tuples, SString& _file);
+	// attribute constructor
 	Schema(StringVector& _attributes, StringVector& _attributeTypes, IntVector& _distincts);
+	// full constructor
+	Schema(StringVector& _attributes, StringVector& _attributeTypes, IntVector& _distincts,
+		SInt& _tuples, SString& _file);
 	// copy constructor
 	Schema(const Schema& _other);
 	// assignment operator
@@ -61,6 +70,13 @@ public:
 	unsigned int GetNumAtts();
 	AttributeVector& GetAtts();
 
+	SInt& GetNoTuples();
+	SString& GetDataFile();
+
+	// set functions
+	void SetNoTuples(SInt&);
+	void SetDataFile(SString&);
+
 	// append other schema
 	int Append(Schema& _other);
 
@@ -71,9 +87,6 @@ public:
 	// find number of distincts of specified attribute
 	// return -1 if attribute is not present
 	SInt GetDistincts(SString& _attName);
-
-	// find number of distincts of specified attribute
-	// return -1 if attribute is not present
 	int SetDistincts(SString& _attName, SInt& _noDistinct);
 
 	// rename an attribute

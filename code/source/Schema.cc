@@ -30,8 +30,30 @@ void Attribute::Swap(Attribute& _other) {
 }
 
 
+Schema::Schema() : noTuples(0), fPath(string("")) {
+}
+
+Schema::Schema(SInt& _tuples, SString& _file) : noTuples(_tuples), fPath(_file) {
+}
+
 Schema::Schema(StringVector& _attributes, StringVector& _attributeTypes,
-	IntVector& _distincts) {
+	IntVector& _distincts) : noTuples(0), fPath(string("")) {
+	for (int i = 0; i < _attributes.Length(); i++) {
+		Attribute a;
+
+		a.name = _attributes[i];
+		a.noDistinct = _distincts[i];
+
+		if (_attributeTypes[i] == SString("INTEGER") || _attributeTypes[i] == SString("Integer")) a.type = Integer;
+		else if (_attributeTypes[i] == SString("FLOAT") || _attributeTypes[i] == SString("Float")) a.type = Float;
+		else if (_attributeTypes[i] == SString("STRING") || _attributeTypes[i] == SString("String")) a.type = String;
+
+		atts.Append(a);
+	}
+}
+
+Schema::Schema(StringVector& _attributes, StringVector& _attributeTypes,
+	IntVector& _distincts, SInt& _tuples, SString& _file) : noTuples(_tuples), fPath(_file) {
 	for (int i = 0; i < _attributes.Length(); i++) {
 		Attribute a;
 
@@ -47,6 +69,9 @@ Schema::Schema(StringVector& _attributes, StringVector& _attributeTypes,
 }
 
 Schema::Schema(const Schema& _other) {
+	noTuples = _other.noTuples;
+	fPath = _other.fPath;
+
 	AttributeVector newObject;
 	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
 
@@ -61,6 +86,9 @@ Schema::Schema(const Schema& _other) {
 Schema& Schema::operator=(const Schema& _other) {
 	// handle self-assignment first
 	if (this == &_other) return *this;
+
+	noTuples = _other.noTuples;
+	fPath = _other.fPath;
 
 	AttributeVector newObject;
 	newObject.Swap(const_cast<AttributeVector&>(_other.atts));
@@ -82,6 +110,8 @@ Schema::~Schema() {
 
 void Schema::Swap(Schema& _other) {
 	atts.Swap(_other.atts);
+	noTuples.Swap(_other.noTuples);
+	fPath.Swap(_other.fPath);
 }
 
 unsigned int Schema::GetNumAtts() {
@@ -90,6 +120,22 @@ unsigned int Schema::GetNumAtts() {
 
 AttributeVector& Schema::GetAtts() {
 	return atts;
+}
+
+SInt& Schema::GetNoTuples() {
+	return noTuples;
+}
+
+SString& Schema::GetDataFile() {
+	return fPath;
+}
+
+void Schema::SetNoTuples(SInt& _tuples) {
+	noTuples = _tuples;
+}
+
+void Schema::SetDataFile(SString& _file) {
+	fPath = _file;
 }
 
 int Schema::Append(Schema& _other) {
@@ -166,7 +212,6 @@ int Schema::Project(IntVector& _attsToKeep) {
 		}
 		else {
 			atts.Swap(copy);
-
 			AttributeVector avt; copy.Swap(avt);
 
 			return -1;
@@ -202,6 +247,8 @@ ostream& operator<<(ostream& _os, Schema& _c) {
 		if (i < _c.atts.Length()-1) _os << ", ";
 	}
 	_os << ")";
+
+	_os << "[" << _c.noTuples << "] [" << _c.fPath << "]" << endl;
 
 	return _os;
 }

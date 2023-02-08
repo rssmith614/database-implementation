@@ -30,6 +30,55 @@ CREATE TABLE attributes (
 );
 
 
+// data structure in Catalog.h
+Map :: tableName --> schema
+Map<SString, Schema> schemas;
+
+
+// Catalog constructor
+Catalog()
+	select name, num_tuples, file
+	from tables;
+
+	iterate over result tuples
+		select t.name, num_tuples, file, position, a.name, type, num_distinct
+		from tables t, attributes a
+		where t.name = a.table_name
+			and t.name = ?
+		order by position;
+
+		iterate over attributes of current table
+			populate these vectors
+				StringVector& _attributes
+				StringVector& _attributeTypes
+				IntVector& _distincts
+
+		Schema(StringVector& _attributes, StringVector& _attributeTypes, IntVector& _distincts,
+			SInt& _tuples, SString& _file);
+
+		schemas.Insert(tableName, schema)
+
+
+bool GetNoTuples(SString& _table, SInt& _noTuples);
+	schemas.IsThere(_table)
+	tblSchema = schemas.CurrentData()
+	_noTuples = tblSchema.GetNoTuples()
+
+
+bool Save()
+	if (modified == true)
+		delete from tables;
+		delete from attributes;
+
+		iterate over schemas map
+			insert into tables values(tblName, numTuples, path)
+
+			GetAtts()
+			iterate over attributes
+				insert into attributes(...)
+
+
+
 insert into tables values('customer', 1500, 'customer.dat');
 insert into tables values('lineitem', 60175, 'lineitem.dat');
 insert into tables values('nation', 25, 'nation.dat');
@@ -110,68 +159,3 @@ insert into attributes values('supplier', 5, 's_acctbal', 'FLOAT', 100);
 insert into attributes values('supplier', 6, 's_comment', 'STRING', 100);
 
 
-sqlite3 *db_INTERNAL;			// database
-int rc_INTERNAL = SQLITE_OK;	// error codes
-sqlite3_stmt *stmt_INTERNAL;	//statement
-char *pzTail_INTERNAL;			// tail pointer
-int nCol_INTERNAL;				// number of columns
-const char *zLeftover_INTERNAL; // leftover for processing multiple statements
-const char *zSql_INTERNAL;
-char buffer_INTERNAL[10000];
-
-rc_INTERNAL = sqlite3_open("catalog.sqlite", &db_INTERNAL);
-if (rc_INTERNAL != SQLITE_OK) {
-	fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db_INTERNAL));
-	sqlite3_close(db_INTERNAL);
-	exit(1);
-}
-
-zSql_INTERNAL = "select pos_in_table as pos, name, type, distinct_val
-								 from Attributes
-								 where table_id = %d
-								 order by pos_in_table;";
-sprintf(buffer_INTERNAL, zSql_INTERNAL, t_id);
-zSql_INTERNAL = buffer_INTERNAL;
-
-stmt_INTERNAL = 0;
-rc_INTERNAL = sqlite3_prepare_v2(
-	db_INTERNAL,
-	zSql_INTERNAL,
-	-1,
-	&stmt_INTERNAL,
-	&zLeftover_INTERNAL);
-
-if (rc_INTERNAL != SQLITE_OK) {
-	fprintf(stderr, "Cannot compile statement %s\n The error is %s\n",
-			zSql_INTERNAL, sqlite3_errmsg(db_INTERNAL));
-}
-
-while (true) {
-	// read a row
-	rc_INTERNAL = sqlite3_step(stmt_INTERNAL);
-
-	if (rc_INTERNAL != SQLITE_DONE && rc_INTERNAL != SQLITE_ROW) {
-		fprintf(stderr, "Cannot run statement %s\n The error is %s\n",
-				zSql_INTERNAL, sqlite3_errmsg(db_INTERNAL));
-		break;
-	}
-
-	if (rc_INTERNAL == SQLITE_DONE) // nothing more to do
-		break;
-
-	// read the columns
-	int _pos = sqlite3_column_int(stmt_INTERNAL, 0);
-	char *_name = strdup((char *)sqlite3_column_text(stmt_INTERNAL, 1));
-	char *_type = strdup((char *)sqlite3_column_text(stmt_INTERNAL, 2));
-	int _distinct = sqlite3_column_int(stmt_INTERNAL, 3);
-	
-	// use the read values here
-
-	// free memory for char* pointers
-	free(_name);
-	free(_type);
-}
-
-sqlite3_finalize(stmt_INTERNAL);
-
-sqlite3_close(db_INTERNAL);

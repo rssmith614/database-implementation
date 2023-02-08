@@ -12,25 +12,26 @@ typedef Map<KInt,SInt> MapIntInt;
 int main (int argc, char* argv[]) {
 	MapIntInt mii;
 
+	KInt ki, kj;
+	SInt di, dj;
 	for (int i = 0; i < 20; i++) {
-		KInt ki = i;
-		SInt di = i*100;
+		ki = i;
+		di = i*100;
 		mii.Insert(ki, di);
 	}
 	cout << "map = ";
 	cout << mii << endl;
 
 	for (int i = 0; i < 20; i++) {
-		KInt ki = 20-i;
-		SInt di = i*10;
+		ki = 20-i;
+		di = i*10;
 		mii.Insert(ki, di);
 	}
 	cout << "map = ";
 	cout << mii << endl;
 
 	for (int i = 0; i < 10; i++) {
-		KInt ki = i;
-		SInt di;
+		ki = i;
 
 		int isIn = mii.Find(ki, di);
 		if (isIn == 0)
@@ -49,7 +50,7 @@ int main (int argc, char* argv[]) {
 	cout << mii << endl;
 
 	for (int i = 0; i < 30; i++) {
-		KInt ki = i;
+		ki = i;
 
 		int isIn = mii.IsThere(ki);
 		if (isIn == 0)
@@ -65,20 +66,20 @@ int main (int argc, char* argv[]) {
 	}
 
 	for (int i = 0; i < 5; i++) {
-		KInt ki = i, kj;
-		SInt dj;
+		ki = i;
 		mii.Remove(ki, kj, dj);
 	}
 	cout << "map = ";
 	cout << mii << endl;
 
 	for (int i = 5; i < 10; i++) {
-		KInt ki = i, kj;
-		SInt dj;
-		mii.Remove(ki, kj, dj);
+		ki = i;
 
-		while (!mii.AtEnd() && mii.CurrentKey().IsEqual(ki)) {
-			mii.Remove(ki, kj, dj);
+		int isIn = mii.Remove(ki, kj, dj);
+		if (isIn == 1) {
+			while (!mii.AtEnd() && mii.CurrentKey().IsEqual(ki)) {
+				mii.Remove(ki, kj, dj);
+			}
 		}
 
 	}
