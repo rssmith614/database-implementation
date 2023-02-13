@@ -1,12 +1,20 @@
 SQL ::= SELECT SelectAtts FROM Tables WHERE AndList |
-        SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts 
+        SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts
 
 Tables ::= YY_NAME | Tables ',' YY_NAME
 
 SelectAtts ::= Function ',' Atts | Function | Atts | DISTINCT Atts 
 Atts ::= YY_NAME | Atts ',' YY_NAME 
 
-Function ::= SUM '(' CompoundExp ')' 
+Function ::= SUM '(' CompoundExp ')'
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Function ::= SUM '(' CompoundExp ')' | COUNT '(' CompoundExp ')' | AVERAGE '(' CompoundExp ')'
+
+Function ::= FuncType '(' CompoundExp ')'
+FuncType ::= SUM | COUNT | AVERAGE | MIN | MAX 
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 CompoundExp ::= SimpleExp Op CompoundExp | '(' CompoundExp ')' Op CompoundExp |
  		       '(' CompoundExp ')' | SimpleExp | '-' CompoundExp 
 
@@ -73,3 +81,59 @@ code = EQUALS
 Literal
 YY_STRING
 right = {code = STRING, value = 'Customer#000000010'}
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+struct FuncOperator* finalFunction = {}; // the aggregate function
+struct TableList* tables = {}; // the list of tables in the query
+struct AndList* predicate = {}; // the predicate in WHERE
+struct NameList* groupingAtts = {}; // grouping attributes
+struct NameList* attsToSelect = {}; // the attributes in SELECT
+int distinctAtts = 0; // 1 if there is a DISTINCT in a non-aggregate query 
+
+
+SELECT SUM(l_extendedprice * l_discount * (1.0-l_tax)) FROM lineitem WHERE l_orderkey > -1
+SELECT SelectAtts                                      FROM Tables   WHERE AndList
+---------------------
+groupingAtts = {}
+
+SUM  ( l_extendedprice * l_discount * (1.0-l_tax) )
+SelectAtts
+Function
+SUM '(' CompoundExp ')'
+---------------------
+attsToSelect = {}
+
+l_extendedprice *       l_discount * (1.0-l_tax)
+CompoundExp
+SimpleExp       Op      CompoundExp
+YY_NAME         '*'
+
+l_discount      *       (1.0-l_tax)
+CompoundExp
+SimpleExp       Op      CompoundExp
+YY_NAME         '*'
+
+(       1.0-l_tax             )
+CompoundExp
+'('     CompoundExp         ')'
+
+1.0             -               l_tax
+CompoundExp
+SimpleExp       Op              CompoundExp
+YY_FLOAT        '-'             CompoundExp
+
+l_tax
+CompoundExp
+SimpleExp
+YY_NAME
+
+lineitem
+Tables
+YY_NAME
+
+l_orderkey      >               -1
+AndList
+Condition
+Literal         BoolComp        Literal
+YY_NAME         '>'             YY_INTEGER
