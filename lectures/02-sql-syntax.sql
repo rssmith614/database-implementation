@@ -137,3 +137,37 @@ AndList
 Condition
 Literal         BoolComp        Literal
 YY_NAME         '>'             YY_INTEGER
+
+
+
+l_extendedprice * l_discount * (1.0-l_tax)
+
+        l_extendedprice
+*
+                l_discount
+        *
+                        1.0
+                -
+                        l_tax
+* l_extendedprice * l_discount - 1.0 l_tax
+
+l_extendedprice
+l_discount
+1.0
+l_tax
+-
++++++++++++++++++++++
+1.0-l_tax --> r1
+
+l_extendedprice
+l_discount
+r1
+*
++++++++++++++++++++++
+l_discount*r1 --> r2
+
+l_extendedprice
+r2
+*
++++++++++++++++++++++
+l_extendedprice*r2 --> result

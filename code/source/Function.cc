@@ -108,7 +108,6 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 				atoi (parseTree->leftOperand->value);
 			numOps++;
 			return Integer;
-
 		}
 		else {
 			opList[numOps].myOp = PushDouble;
@@ -164,13 +163,13 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 		// if we got here, then at least one of the two is a double, so
 		// the integer must be cast as appropriate
 		if (myTypeLeft == Integer) {
-			// the left operand is an ant and needs to be cast
+			// the left operand is an int and needs to be cast
 			opList[numOps].myOp = ToDouble2Down;
 			numOps++;	
 		}
 
 		if (myTypeRight == Integer) {
-			// the left operand is an ant and needs to be cast
+			// the right operand is an int and needs to be cast
 			opList[numOps].myOp = ToDouble;
 			numOps++;
 		}
