@@ -8,6 +8,8 @@
 #include "Function.h"
 #include "RelOp.h"
 
+#include <stack>
+
 using namespace std;
 
 
@@ -83,49 +85,131 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// need nTbl - 1 Join operators
 	// new Join(schemaLeft, schemaRight, schemaOut, predicate, left, right)
 
+	RelationalOp* sapling = forest[0];
+	Schema outputSchema = forestSchema[0];
+	
 	// create the remaining operators based on the query
 	if (_groupingAtts != NULL) {
 		// create GroupBy operators (always only a single aggregate)
+		Schema schemaIn = outputSchema;
 		// schemaIn = schema of last table in the forest
+		StringVector atts; SString attName("SUM()"); atts.Append(attName);
+		StringVector attTypes; SString attType("FLOAT"); atts.Append(attType);
+		IntVector distincts; SInt dist(1); distincts.Append(dist);
+		Schema sumSchema(atts, attTypes, distincts);
 		// sumSchema = new Schema with single attribute of SUM function
+		IntVector keepMe;
+		int numAttsOutput = 0;
+		for (NameList* att = _groupingAtts; att != NULL; att = att->next){
+			numAttsOutput += 1;
+			SString attName(att->name);
+			SInt idx = schemaIn.Index(attName);
+			keepMe.Append(idx);
+		}
 		// for att in _groupingAtts
 			// numAttsOutput += 1
 			// idx = schemaIn.Index(att)
 			// keepMe.Append(idx)
-		// schemaOut = schemaIn
-		// schemaOut = schemaOut.Project(keepMe)
-		// sumSchema.Append(schema of _groupingAtts based on keepMe)
-		// compute.GrowFromParseTree(_finalFunction, schemaIn)
-		// groupingAtts = new OrderMaker(schemaIn, keepMe, keepMe.Length())
-		// new GroupBy(schemaIn, schemaOut, groupingAtts, compute, producer)
+
+		// SUM(att1), att2 -- will always do this one
+		// att2, SUM(att1) -- will not handle this properly
+		
+		Schema schemaOut = schemaIn;
+		schemaOut.Project(keepMe);
+		sumSchema.Append(schemaOut);
+
+		// Sum function
+		Function compute;
+		compute.GrowFromParseTree(_finalFunction, schemaIn);
+
+		// OrderMaker constructor takes int*, not IntVector
+		int* keepMe_intv = new int[numAttsOutput];
+		for (int i=0; i<numAttsOutput; i++) {
+			keepMe_intv[i] = keepMe[i];
+		}
+	
+		OrderMaker groupingAtts(schemaIn, keepMe_intv, keepMe.Length());
+
+		delete [] keepMe_intv;
+
+		RelationalOp* producer = sapling;
+		sapling = new GroupBy(schemaIn, schemaOut, groupingAtts, compute, producer);
+
+		forestSchema[0] = schemaOut;
+
 	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
 		// create Sum operator
 		// schemaIn = schema of last table in the forest
+		Schema schemaIn = outputSchema;
+		
 		// schemaOut = new Schema with single attribute
-		// compute.GrowFromParseTree(_finalFunction, schemaIn)
-		// new Sum(schemaIn, schemaOut, compute, producer)
+		StringVector atts; SString attName("SUM()"); atts.Append(attName);
+		StringVector attTypes; SString attType("FLOAT"); atts.Append(attType);
+		IntVector distincts; SInt dist(1); distincts.Append(dist);
+		Schema schemaOut(atts, attTypes, distincts);
+
+		// Sum function
+		Function compute;
+		compute.GrowFromParseTree(_finalFunction, schemaIn);
+
+		RelationalOp* producer = sapling;
+		sapling = new Sum(schemaIn, schemaOut, compute, producer);
+
+		outputSchema = schemaOut;
+
 	} else {
 		// create Project operators
 		// schemaIn = schema of last table in the forest
-		// for att in _attsToSelect
-			// numAttsOutput += 1
-			// idx = schemaIn.Index(att)
-			// keepMe.Append(idx)
-		// schemaOut = schemaIn
-		// schemaOut = schemaOut.Project(keepMe)
-		// new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe, producer)
+		Schema schemaIn = outputSchema;
+		int numAttsInput = schemaIn.GetNumAtts();
+		
+		// schemaOut based on indexes of atts
+		Schema schemaOut = schemaIn;
+		IntVector keepMe;
+		for (NameList* att = _attsToSelect; att != NULL; att = att->next) {
+			SString attName(att->name);
+			SInt idx = schemaIn.Index(attName);
+			keepMe.Append(idx);
+		}
+		schemaOut.Project(keepMe);
+		int numAttsOutput = keepMe.Length();
+
+		// Project constructor takes int*, not IntVector
+		int* keepMe_intv = new int[numAttsOutput];
+		for (int i=0; i<numAttsOutput; i++) {
+			keepMe_intv[i] = keepMe[i];
+		}
+
+		RelationalOp* producer = sapling;
+		sapling = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
+
+		outputSchema = schemaOut;
+
+		delete [] keepMe_intv;
+
+		// distinct
 		if (_distinctAtts != 0) {
 			// schema = schema of the Project you just made
+			Schema schema = outputSchema;
 			// producer = the new Project you just made
-			// new DuplicateRemoval(schema, producer)
+			RelationalOp* producer = sapling;
+			sapling = new DuplicateRemoval(schema, producer);
 		}
 	}
+
+	cout << "GROUP BY, FUNCTION, OR PROJECT" << endl;
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << *sapling << endl;
 
 	// connect everything in the query execution tree and return
 	// The root will be a WriteOut operator
 	// _outfile is path to text file where query results are printed
+	string outfile = "output.txt";
+	sapling = new WriteOut(outputSchema, outfile, forest[0]);
+	_queryTree.SetRoot(*sapling);
 
 	// free the memory occupied by the parse tree since it is not necessary anymore
-
+	delete [] forest;
 	delete [] forestSchema;
+	delete root;
 }

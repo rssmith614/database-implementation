@@ -241,7 +241,7 @@ private:
 
 public:
 	QueryExecutionTree() {}
-	virtual ~QueryExecutionTree() {}
+	virtual ~QueryExecutionTree();
 
 	void ExecuteQuery() {}
 	void SetRoot(RelationalOp& _root) {root = &_root;}

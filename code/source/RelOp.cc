@@ -33,14 +33,20 @@ ostream& Scan::print(ostream& _os) {
 
 
 Select::Select(Schema& _schema, CNF& _predicate, Record& _constants,
-	RelationalOp* _producer) :
-	schema(_schema), predicate(_predicate), constants(constants),
-	producer(_producer) {
+	RelationalOp* _producer)
+	// schema(_schema), predicate(_predicate), constants(constants),
+	// producer(_producer) 
+	{
+
+	schema = _schema;
+	predicate = _predicate;
+	constants = _constants;
+	producer = _producer;
 
 }
 
 Select::~Select() {
-
+	delete producer;
 }
 
 bool Select::GetNext(Record& _record) {
@@ -70,7 +76,7 @@ Project::~Project() {
 }
 
 ostream& Project::print(ostream& _os) {
-	return _os << "PROJECT";
+	return _os << "PROJECT\n" << schemaOut << *producer;
 }
 
 
@@ -86,7 +92,7 @@ Join::~Join() {
 }
 
 ostream& Join::print(ostream& _os) {
-	return _os << "JOIN";
+	return _os << "JOIN\n" << *left << '\n' << *right;
 }
 
 
@@ -114,7 +120,7 @@ DuplicateRemoval::~DuplicateRemoval() {
 }
 
 ostream& DuplicateRemoval::print(ostream& _os) {
-	return _os << "DISTINCT";
+	return _os << "DISTINCT\n" << *producer; 
 }
 
 
@@ -126,11 +132,11 @@ Sum::Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
 }
 
 Sum::~Sum() {
-
+	delete producer;
 }
 
 ostream& Sum::print(ostream& _os) {
-	return _os << "SUM";
+	return _os << "SUM\n" << *producer;
 }
 
 
@@ -142,11 +148,11 @@ GroupBy::GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtt
 }
 
 GroupBy::~GroupBy() {
-
+	delete producer;
 }
 
 ostream& GroupBy::print(ostream& _os) {
-	return _os << "GROUP BY";
+	return _os << "GROUP BY {" << schemaOut << "\n" << *producer;
 }
 
 
@@ -156,14 +162,18 @@ WriteOut::WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer) :
 }
 
 WriteOut::~WriteOut() {
-
+	delete producer;
 }
 
 ostream& WriteOut::print(ostream& _os) {
-	return _os << "OUTPUT";
+	return _os << "OUTPUT\n" << schema << *producer;
 }
 
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
-	return _os << "QUERY EXECUTION TREE";
+	return _os << "QUERY EXECUTION TREE\n" << *_op.root;
+}
+
+QueryExecutionTree::~QueryExecutionTree() {
+	delete root;
 }

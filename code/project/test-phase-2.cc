@@ -67,6 +67,8 @@ int main () {
 	compiler.Compile(tables, attsToSelect, finalFunction, predicate,
 		groupingAtts, distinctAtts, queryTree);
 
+	cout << "+++++++++++++++++++" << endl;
+	cout << "+++++++++++++++++++" << endl;
 	cout << queryTree << endl;
 
 	return 0;
