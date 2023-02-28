@@ -3,6 +3,11 @@
 SQL ::= SELECT SelectAtts FROM Tables WHERE AndList |
         SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts 
 
+THE LAWS OF QUERY EXECUTION
+1. must always have select or join
+2. must always have project, sum, or group by
+3. distinct can only be present if project is present
+
 -- recursive definition of non-terminal Tables
 -- YY_NAME is a terminal
 Tables ::= YY_NAME | Tables ',' YY_NAME
@@ -76,3 +81,47 @@ code = EQUALS
 Literal
 YY_STRING
 right = {code = STRING, value = 'Customer#000000010'}
+
+
+SELECT SUM(l_extendedprice * l_discount * (1.0-l_tax)) FROM lineitem WHERE l_orderkey > -1
+SELECT SelectAtts                                      FROM Tables   WHERE AndList
+
+SUM  ( l_extendedprice * l_discount * (1.0-l_tax) )
+SelectAtts
+Function
+SUM '(' CompoundExp ')'
+attsToSelect = {}
+
+l_extendedprice *       l_discount * (1.0-l_tax)
+CompoundExp
+SimpleExp       Op      CompoundExp
+YY_NAME         '*'
+
+l_discount      *       (1.0-l_tax)
+CompoundExp
+SimpleExp       Op      CompoundExp
+YY_NAME         '*'
+
+(1.0-l_tax)
+CompoundExp
+'(' CompoundExp ')'
+
+1.0             -       l_tax
+CompoundExp
+SimpleExp       Op      CompoundExp
+YY_FLOAT        '-'
+
+l_tax
+CompoundExp
+SimpleExp
+YY_NAME
+
+lineitem
+Tables
+YY_NAME
+
+l_orderkey      >               -1
+AndList
+Condition
+Literal         BoolComp        Literal
+YY_NAME         '>'             YY_INTEGER

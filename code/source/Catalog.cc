@@ -288,7 +288,7 @@ bool Catalog::GetSchema(SString& _table, Schema& _schema) {
 	if (get != schema_map.end()) {
 		_schema = get->second;
 	} else {
-		cerr << "Error: table " << _table << " not found";
+		cerr << "Error: table " << _table << " not found" << endl;
 		return false;
 	}
 
