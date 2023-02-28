@@ -248,7 +248,7 @@ ostream& operator<<(ostream& _os, Schema& _c) {
 	}
 	_os << ")";
 
-	_os << "[" << _c.noTuples << "] [" << _c.fPath << "]" << endl;
+	_os << "[" << _c.noTuples << "] [" << _c.fPath << "]";
 
 	return _os;
 }

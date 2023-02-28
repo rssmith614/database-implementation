@@ -59,7 +59,7 @@ bool Select::GetNext(Record& _record) {
 }
 
 ostream& Select::print(ostream& _os) {
-	_os << "SELECT {" << schema << "} {" << predicate << "}";
+	_os << "SELECT {" << schema << "} {" << predicate << "}" << "\n|\n\\/\n" << *producer;
 	return _os;
 }
 
@@ -76,7 +76,7 @@ Project::~Project() {
 }
 
 ostream& Project::print(ostream& _os) {
-	return _os << "PROJECT\n" << schemaOut << *producer;
+	return _os << "PROJECT {" << schemaOut << "}\n|\n\\/\n" << *producer;
 }
 
 
@@ -92,7 +92,7 @@ Join::~Join() {
 }
 
 ostream& Join::print(ostream& _os) {
-	return _os << "JOIN\n" << *left << '\n' << *right;
+	return _os << "JOIN" << "\n|\n\\/ \t\t \n|\n\\/\n" << *left << '\t' << *right;
 }
 
 
@@ -120,7 +120,7 @@ DuplicateRemoval::~DuplicateRemoval() {
 }
 
 ostream& DuplicateRemoval::print(ostream& _os) {
-	return _os << "DISTINCT\n" << *producer; 
+	return _os << "DISTINCT {" << schema << "}\n|\n\\/\n" << *producer; 
 }
 
 
@@ -136,7 +136,7 @@ Sum::~Sum() {
 }
 
 ostream& Sum::print(ostream& _os) {
-	return _os << "SUM\n" << *producer;
+	return _os << "SUM {" << schemaOut << "}\n|\n\\/\n" << *producer;
 }
 
 
@@ -152,7 +152,7 @@ GroupBy::~GroupBy() {
 }
 
 ostream& GroupBy::print(ostream& _os) {
-	return _os << "GROUP BY {" << schemaOut << "\n" << *producer;
+	return _os << "GROUP BY {" << schemaOut << "} {" << groupingAtts << "}" << "\n|\n\\/\n" << *producer;
 }
 
 
@@ -166,7 +166,7 @@ WriteOut::~WriteOut() {
 }
 
 ostream& WriteOut::print(ostream& _os) {
-	return _os << "OUTPUT\n" << schema << *producer;
+	return _os << "OUTPUT {" << schema << "} <" << outFile << "> \n|\n\\/\n" << *producer << endl;
 }
 
 

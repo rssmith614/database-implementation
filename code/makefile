@@ -119,4 +119,3 @@ clean:
 	rm -f source/QueryLexer.c
 	rm -f source/QueryParser.c
 	rm -f headers/QueryParser.h
-	rm -f catalog.sqlite

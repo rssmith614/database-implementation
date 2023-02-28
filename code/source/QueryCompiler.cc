@@ -85,16 +85,17 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// need nTbl - 1 Join operators
 	// new Join(schemaLeft, schemaRight, schemaOut, predicate, left, right)
 
+	// after joins, 
 	RelationalOp* sapling = forest[0];
-	Schema outputSchema = forestSchema[0];
+	Schema saplingSchema;
 	
 	// create the remaining operators based on the query
 	if (_groupingAtts != NULL) {
 		// create GroupBy operators (always only a single aggregate)
-		Schema schemaIn = outputSchema;
+		Schema schemaIn = forestSchema[0];
 		// schemaIn = schema of last table in the forest
-		StringVector atts; SString attName("SUM()"); atts.Append(attName);
-		StringVector attTypes; SString attType("FLOAT"); atts.Append(attType);
+		StringVector atts; SString attName("sum"); atts.Append(attName);
+		StringVector attTypes; SString attType("FLOAT"); attTypes.Append(attType);
 		IntVector distincts; SInt dist(1); distincts.Append(dist);
 		Schema sumSchema(atts, attTypes, distincts);
 		// sumSchema = new Schema with single attribute of SUM function
@@ -106,10 +107,6 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 			SInt idx = schemaIn.Index(attName);
 			keepMe.Append(idx);
 		}
-		// for att in _groupingAtts
-			// numAttsOutput += 1
-			// idx = schemaIn.Index(att)
-			// keepMe.Append(idx)
 
 		// SUM(att1), att2 -- will always do this one
 		// att2, SUM(att1) -- will not handle this properly
@@ -133,18 +130,18 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 		delete [] keepMe_intv;
 
 		RelationalOp* producer = sapling;
-		sapling = new GroupBy(schemaIn, schemaOut, groupingAtts, compute, producer);
+		sapling = new GroupBy(schemaIn, sumSchema, groupingAtts, compute, producer);
 
-		forestSchema[0] = schemaOut;
+		saplingSchema = sumSchema;
 
 	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
 		// create Sum operator
 		// schemaIn = schema of last table in the forest
-		Schema schemaIn = outputSchema;
+		Schema schemaIn = forestSchema[0];
 		
 		// schemaOut = new Schema with single attribute
-		StringVector atts; SString attName("SUM()"); atts.Append(attName);
-		StringVector attTypes; SString attType("FLOAT"); atts.Append(attType);
+		StringVector atts; SString attName("sum"); atts.Append(attName);
+		StringVector attTypes; SString attType("FLOAT"); attTypes.Append(attType);
 		IntVector distincts; SInt dist(1); distincts.Append(dist);
 		Schema schemaOut(atts, attTypes, distincts);
 
@@ -155,12 +152,12 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 		RelationalOp* producer = sapling;
 		sapling = new Sum(schemaIn, schemaOut, compute, producer);
 
-		outputSchema = schemaOut;
+		saplingSchema = schemaOut;
 
 	} else {
 		// create Project operators
 		// schemaIn = schema of last table in the forest
-		Schema schemaIn = outputSchema;
+		Schema schemaIn = forestSchema[0];
 		int numAttsInput = schemaIn.GetNumAtts();
 		
 		// schemaOut based on indexes of atts
@@ -183,14 +180,14 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 		RelationalOp* producer = sapling;
 		sapling = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
 
-		outputSchema = schemaOut;
+		saplingSchema = schemaOut;
 
 		delete [] keepMe_intv;
 
 		// distinct
 		if (_distinctAtts != 0) {
 			// schema = schema of the Project you just made
-			Schema schema = outputSchema;
+			Schema schema = saplingSchema;
 			// producer = the new Project you just made
 			RelationalOp* producer = sapling;
 			sapling = new DuplicateRemoval(schema, producer);
@@ -205,7 +202,7 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// The root will be a WriteOut operator
 	// _outfile is path to text file where query results are printed
 	string outfile = "output.txt";
-	sapling = new WriteOut(outputSchema, outfile, forest[0]);
+	sapling = new WriteOut(saplingSchema, outfile, sapling);
 	_queryTree.SetRoot(*sapling);
 
 	// free the memory occupied by the parse tree since it is not necessary anymore
