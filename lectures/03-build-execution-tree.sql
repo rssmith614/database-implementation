@@ -240,6 +240,70 @@ JOIN
 Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
         CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
 
+--> if we have N tables in the query, we have to create (N-1) joins
+
++++++++++++++++++++
+ - if N = 1 --> no join is needed
+SELECT l_orderkey, l_partkey, l_suppkey
+FROM lineitem
+WHERE l_returnflag = 'R' AND l_discount < 0.04 AND l_shipmode = 'MAIL'
+
+SCAN(lineitem) / schema = {lineitem}
+SELECT(l_returnflag = 'R' AND l_discount < 0.04 AND l_shipmode = 'MAIL') / schema = {lineitem}
+PROJECT(l_orderkey, l_partkey, l_suppkey) / schemaIn = {lineitem}; schemaOut = {l_orderkey, l_partkey, l_suppkey}
+WRITEOUT() / schema = {l_orderkey, l_partkey, l_suppkey}
+
+SELECT DISTINCT c_name, c_address, c_acctbal 
+FROM customer 
+WHERE c_name = 'Customer#000070919'
+
+SCAN(customer) / schema = {customer}
+SELECT(c_name = 'Customer#000070919') / schema = {customer}
+PROJECT(c_name, c_address, c_acctbal) / schemaIn = {customer}; schemaOut = {c_name, c_address, c_acctbal}
+DUPLICATEREMOVAL() / schema = {c_name, c_address, c_acctbal}
+WRITEOUT() / schema = {c_name, c_address, c_acctbal}
+
+
++++++++++++++++++++
+ - if N = 2 --> only one join is needed
+SELECT SUM(c_acctbal), c_name 
+FROM customer, orders 
+WHERE c_custkey = o_custkey AND o_totalprice < 10000.00
+GROUP BY c_name
+
+SCAN(customer) / schema = {customer}-----------------------
+                                                          | -- JOIN(c_custkey = o_custkey) / schemaOut = {customer \UNION orders}
+SCAN(orders) / schema = {orders}                          |
+SELECT(o_totalprice < 10000.00) / schema = {orders}--------
+
+JOIN
+----
+CNF predicate;
+predicate.ExtractCNF (AndList& parseTree, Schema& leftSchema = {customer}, Schema& rightSchema = {orders});
+--> check this returns value > 0 and only then create a JOIN
+
+GROUPBY(SUM(c_acctbal), {c_name}) / schemaIn = {customer \UNION orders}; schemaOut = {aggregate, c_name}
+WRITEOUT() / schema = {aggregate, c_name}
+
+RelationalOp** forest = new RelationalOp*[nTbl];
+Schema* forestSchema = new Schema[nTbl];
+
+joinOp = new NestedLoopJoin(forestSchema[0], forestSchema[1], schemaOut, predicate, forest[0], forest[1])
+nTbl = 1
+forest[0] = joinOp
+forestSchema[0] = schemaOut
+
+groupOp = new GroupBy(..., forestSchema[0], forest[0])
+forest[0] = groupOp
+forestSchema[0] = schemaOut
+
+writeOp = new WriteOut(..., forestSchema[0], forest[0])
+forest[0] = writeOp
+
+
++++++++++++++++++++
+ - if N > 2 --> create N-1 joins
+
 SELECT SUM(ps_supplycost), s_suppkey
 FROM part, supplier, partsupp
 WHERE p_partkey = ps_partkey AND s_suppkey = ps_suppkey
@@ -254,3 +318,45 @@ JOINS
 +++++++++++++++++++++++++++
 GROUPBY(SUM(ps_supplycost), {s_suppkey})
 WRITEOUT()
+
+- create one join at a time
+
+- for the first table in the forest, find a table it joins with and create a join operator
+SCAN(part)
+
+CNF predicate;
+predicate.ExtractCNF (AndList& parseTree, forestSchema[0], forestSchema[i]) / i = {1, nTbl-1}
+--> check this returns value > 0 and only then create a JOIN
+--> there is a join predicate between forest[0] and forest[i]
+
+i = 1
+- it does not work for SCAN(supplier)
+
+i = 2
+- there is a join condition with SCAN(partsupp)
+- we create a join between SCAN(part) and SCAN(partsupp)
+joinOp = new NestedLoopJoin(forestSchema[0], forestSchema[i], schemaOut, predicate, forest[0], forest[i])
+nTbl = nTbl-1
+forest[0] = joinOp
+forestSchema[0] = schemaOut
+
+- translate forest and forestSchema to the left starting at index i
+for j = i to nTbl-1
+        forest[j] = forest[j+1]
+        forestSchema[j] = forestSchema[j+1]
+
+- for the first operator in the forest, find an operator it joins with and create a join operator
+JOIN(part, partsupp)
+
+i = 1
+- there is a join condition with SCAN(supplier)
+
+while (nTbl > 1) {
+
+        for i = 1 to nTbl-1 {
+                try join between forest[0] and forest[i]
+                break
+        }
+        
+        create join between forest[0] and forest[i]
+}
