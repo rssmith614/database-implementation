@@ -97,6 +97,28 @@ orders --------------------------------------------------------										|
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --
 
 
+SELECT DISTINCT l_discount
+FROM nation, customer, orders, lineitem
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+
+nation -----------------------------------
+										  |-- join -----------------------  (25*1500)
+customer -- selection(c_acctbal < 1000) --								  |							
+																		  | -- join	--  (1500*15000)					
+orders -------------------------------------------------------------------			  |
+															   						  | -- join (15000*60175)
+lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
+
+25*1500 + 1500*15000 + 15000*60175
+
+nation -----------------------------------
+										  |-- join -----------------------  (25*500)
+customer -- selection(c_acctbal < 1000) --  (500)						  |							
+																		  | -- join	--  (500*15000)					
+orders -------------------------------------------------------------------			  |
+															   						  | -- join (5000*400)
+lineitem -- selection(30 = l_quantity AND l_discount < 0.03)  (400)-------------------
 
 
 nation -----------------------------------
@@ -108,6 +130,12 @@ orders --------------------------------------------------------			  |
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --  (1)
 
 
+
+SELECT DISTINCT l_discount
+FROM customer, orders, lineitem, nation
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+
 customer -- selection(c_acctbal < 1000) --
 										  | -- join -----------  (1500*15000)
 orders -----------------------------------					   |
@@ -116,6 +144,13 @@ lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --			   |
 																		   | -- join  (60175*25)
 nation --------------------------------------------------------------------
 
+1500*15000 + 15000*60175 + 60175*25
+
+
+SELECT DISTINCT l_discount
+FROM customer, orders, nation, lineitem
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
 
 customer -- selection(c_acctbal < 1000) --
 										  | -- join -----------  (1500*15000)
@@ -125,32 +160,12 @@ nation --------------------------------------------------------			   |
 																		   | -- join  (15000*60175)
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --------------
 
-
-nation -----------------------------------
-										  |-- join -----------------------  (25*1500)
-customer -- selection(c_acctbal < 1000) --								  |							
-																		  | -- join	--  (1500*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (15000*60175)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
+1500*15000 + 15000*25 + 60175*15000
 
 
-nation -----------------------------------
-										  |-- join -----------------------  (25*1)
-customer -- selection(c_acctbal < 1000) --  (1)							  |							
-																		  | -- join	--  (1*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (15000*60175)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
-
-
-nation -----------------------------------
-										  |-- join -----------------------  (25*500)
-customer -- selection(c_acctbal < 1000) --  (500)						  |							
-																		  | -- join	--  (500*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (5000*400)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03)  (400)-------------------
+1500*15000 +  25*1500 + 15000*60175
+1500*15000 + 60175*25 + 15000*60175
+1500*15000 + 15000*25 + 15000*60175
 
 
 
@@ -199,7 +214,7 @@ nation (25) -----------------------------------
 customer (1500) -- selection(c_acctbal < 1000) (500)						  							
 																		  
 orders (15000) -------------------------------------------------------------------			  
-															   					 | -- join(o_orderkey = l_orderkey)
+															   					 | -- join(o_orderkey = l_orderkey) (400)
 lineitem (60175) -- selection(30 = l_quantity AND l_discount < 0.03) (400) -------
 
 output schema of join(o_orderkey = l_orderkey)
@@ -306,7 +321,7 @@ orders (15000)
 customer (1500)
 
 nation (25) --
-			 | -- join(n_regionkey = r_regionkey) -- (n_nationkey, n_regionkey, r_regionkey) Project[n_nationkey]
+			 | -- join(n_regionkey = r_regionkey) -- (n_nationkey, n_regionkey, r_regionkey) Project[n_nationkey] (25)
 region (5) ---
 
 

@@ -359,4 +359,7 @@ while (nTbl > 1) {
         }
         
         create join between forest[0] and forest[i]
+        translate forest and forestSchema to the left starting at index i
+
+        nTbl = nTbl - 1
 }
