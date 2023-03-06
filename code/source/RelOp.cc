@@ -1,11 +1,12 @@
 #include <iostream>
+#include <stack>
 #include "RelOp.h"
 
 using namespace std;
 
 
 ostream& operator<<(ostream& _os, RelationalOp& _op) {
-	return _op.print(_os);
+	return _op.print(_os, 0);
 }
 
 
@@ -26,8 +27,8 @@ bool Scan::GetNext(Record& _record) {
 	return false;
 }
 
-ostream& Scan::print(ostream& _os) {
-	_os << "SCAN " << tblName << " {" << schema << "}";
+ostream& Scan::print(ostream& _os, int depth) {
+	_os << "SCAN " << schema.GetNoTuples() << ' ' << tblName;
 	return _os;
 }
 
@@ -58,8 +59,10 @@ bool Select::GetNext(Record& _record) {
 	}
 }
 
-ostream& Select::print(ostream& _os) {
-	_os << "SELECT {" << schema << "} {" << predicate << "}" << "\n|\n\\/\n" << *producer;
+ostream& Select::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "SELECT " << predicate << "\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
 	return _os;
 }
 
@@ -75,8 +78,11 @@ Project::~Project() {
 
 }
 
-ostream& Project::print(ostream& _os) {
-	return _os << "PROJECT {" << schemaOut << "}\n|\n\\/\n" << *producer;
+ostream& Project::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "PROJECT " << schemaOut.GetNoTuples() << "\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
+	return _os;
 }
 
 
@@ -91,8 +97,13 @@ Join::~Join() {
 
 }
 
-ostream& Join::print(ostream& _os) {
-	return _os << "JOIN" << "\n|\n\\/ \t\t \n|\n\\/\n" << *left << '\t' << *right;
+ostream& Join::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');		
+	_os << "JOIN " << schemaOut.GetNoTuples() << "\n" << tabs << "├────>";
+	left->print(_os, depth+1);
+	_os << "\n" << tabs << "└────>";
+	right->print(_os, depth+1);
+	return _os;
 }
 
 
@@ -119,8 +130,11 @@ DuplicateRemoval::~DuplicateRemoval() {
 
 }
 
-ostream& DuplicateRemoval::print(ostream& _os) {
-	return _os << "DISTINCT {" << schema << "}\n|\n\\/\n" << *producer; 
+ostream& DuplicateRemoval::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "DISTINCT\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
+	return _os;
 }
 
 
@@ -135,8 +149,11 @@ Sum::~Sum() {
 	delete producer;
 }
 
-ostream& Sum::print(ostream& _os) {
-	return _os << "SUM {" << schemaOut << "}\n|\n\\/\n" << *producer;
+ostream& Sum::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "SUM\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
+	 return _os;
 }
 
 
@@ -151,8 +168,11 @@ GroupBy::~GroupBy() {
 	delete producer;
 }
 
-ostream& GroupBy::print(ostream& _os) {
-	return _os << "GROUP BY {" << schemaOut << "} {" << groupingAtts << "}" << "\n|\n\\/\n" << *producer;
+ostream& GroupBy::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "GROUP BY " << groupingAtts << "\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
+	return _os;
 }
 
 
@@ -165,13 +185,18 @@ WriteOut::~WriteOut() {
 	delete producer;
 }
 
-ostream& WriteOut::print(ostream& _os) {
-	return _os << "OUTPUT {" << schema << "} <" << outFile << "> \n|\n\\/\n" << *producer << endl;
+ostream& WriteOut::print(ostream& _os, int depth) {
+	string tabs(depth, '\t');
+	_os << "OUTPUT " << schema.GetNoTuples() << "\n" << tabs << "└────>";
+	producer->print(_os, depth+1);
+	return _os;
 }
 
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
-	return _os << "QUERY EXECUTION TREE\n" << *_op.root;
+	_os << "QUERY EXECUTION TREE\n";
+	_op.root->print(_os, 0);
+	return _os;
 }
 
 QueryExecutionTree::~QueryExecutionTree() {

@@ -30,7 +30,7 @@ public:
 	/* Virtual function for polymorphic printing using operator<<.
 	 * Each operator has to implement its specific version of print.
 	 */
-    virtual ostream& print(ostream& _os) = 0;
+    virtual ostream& print(ostream& _os, int depth) = 0;
 
     /* Overload operator<< for printing.
      */
@@ -54,7 +54,7 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class Select : public RelationalOp {
@@ -77,7 +77,7 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class Project : public RelationalOp {
@@ -105,7 +105,7 @@ public:
 
 	virtual bool GetNext(Record& _record) {return false;}
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class Join : public RelationalOp {
@@ -131,7 +131,7 @@ public:
 
 	virtual bool GetNext(Record& _record) = 0;
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class NestedLoopJoin : public Join {
@@ -163,7 +163,7 @@ public:
 
 	virtual bool GetNext(Record& _record) {return false;}
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class Sum : public RelationalOp {
@@ -186,7 +186,7 @@ public:
 
 	virtual bool GetNext(Record& _record) {return false;}
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class GroupBy : public RelationalOp {
@@ -211,7 +211,7 @@ public:
 
 	virtual bool GetNext(Record& _record) {return false;}
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 class WriteOut : public RelationalOp {
@@ -231,7 +231,7 @@ public:
 
 	virtual bool GetNext(Record& _record) {return false;}
 
-	virtual ostream& print(ostream& _os);
+	virtual ostream& print(ostream& _os, int depth);
 };
 
 

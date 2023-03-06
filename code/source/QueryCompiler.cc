@@ -42,6 +42,10 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 			exit(1);
 		}
 
+		// SInt noTuples;
+		// catalog->GetNoTuples(s, noTuples);
+		// forestSchema[idx].SetNoTuples(noTuples);
+
 		DBFile dbFile;
 		forest[idx] = new Scan(forestSchema[idx], dbFile, s);
 		idx += 1;
@@ -69,6 +73,8 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 			forest[i] = op;
 			// before: [SCAN]
 			// after: [SELECT] -> [SCAN]
+			// noTuples /= NDV for point query
+			// noTuples /= 3 for range query
 		}
 	}
 
@@ -83,16 +89,48 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 
 	// create join operators based on the optimal order computed by the optimizer
 	// need nTbl - 1 Join operators
-	// new Join(schemaLeft, schemaRight, schemaOut, predicate, left, right)
+
+	while (nTbl > 1) {
+		// for first op in forest, find an op it joins with and create join operator
+		for (int i=1; i < nTbl; i++) {
+			CNF cnf;
+			int ret = cnf.ExtractCNF(*_predicate, forestSchema[0], forestSchema[i]);
+			if (ret > 0) {
+				// SInt noTuples = forestSchema[0].GetNoTuples() * forestSchema[i].GetNoTuples();
+				// (|T| * |R|) / max(NDV(T, joinAtt), NDV(R, joinAtt))
+				
+				Schema schemaOut;
+				schemaOut.Swap(forestSchema[0]);
+				schemaOut.Append(forestSchema[i]);
+				forest[0] = new NestedLoopJoin(forestSchema[0], forestSchema[i], schemaOut, cnf, forest[0], forest[i]);
+				forestSchema[0].Swap(schemaOut);
+				// forestSchema[0].SetNoTuples(noTuples);
+				// pull relops and schemas in forest above i down by one
+				// for j = i..nTbl-2
+				for (int j=i; j < nTbl-1; j++) {
+					forest[j] = forest[j+1];
+					forestSchema[j].Swap(forestSchema[j+1]);
+				}
+				nTbl -= 1;
+				break;
+			} else if (ret==0) {
+				cout << "predicate not found between " << forestSchema[0] << " and " << forestSchema[i] << endl;
+			}
+		}
+	}
+
+	cout << endl << "JOINS" << endl;
+	cout << "+++++++++++++++++++++++" << endl;
+	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
 	// after joins, 
 	RelationalOp* sapling = forest[0];
-	Schema saplingSchema;
+	Schema saplingSchema = forestSchema[0];
 	
 	// create the remaining operators based on the query
 	if (_groupingAtts != NULL) {
 		// create GroupBy operators (always only a single aggregate)
-		Schema schemaIn = forestSchema[0];
+		Schema schemaIn = saplingSchema;
 		// schemaIn = schema of last table in the forest
 		StringVector atts; SString attName("sum"); atts.Append(attName);
 		StringVector attTypes; SString attType("FLOAT"); attTypes.Append(attType);
