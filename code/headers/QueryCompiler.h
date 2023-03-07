@@ -22,6 +22,8 @@ private:
 	Catalog* catalog;
 	QueryOptimizer* optimizer;
 
+	map<pair<int, int>, int> joinCardialities;
+
 public:
 	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);
 	virtual ~QueryCompiler();

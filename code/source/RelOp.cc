@@ -28,7 +28,7 @@ bool Scan::GetNext(Record& _record) {
 }
 
 ostream& Scan::print(ostream& _os, int depth) {
-	_os << "SCAN " << schema.GetNoTuples() << ' ' << tblName;
+	_os << "SCAN (" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, table: " << tblName << ")";
 	return _os;
 }
 
@@ -61,7 +61,7 @@ bool Select::GetNext(Record& _record) {
 
 ostream& Select::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
-	_os << "SELECT " << predicate << "\n" << tabs << "└────>";
+	_os << "SELECT (" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "└────>";
 	producer->print(_os, depth+1);
 	return _os;
 }
@@ -80,7 +80,7 @@ Project::~Project() {
 
 ostream& Project::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
-	_os << "PROJECT " << schemaOut.GetNoTuples() << "\n" << tabs << "└────>";
+	_os << "PROJECT (" << schemaOut.GetNumAtts() << " atts)\n" << tabs << "└────>";
 	producer->print(_os, depth+1);
 	return _os;
 }
@@ -99,7 +99,7 @@ Join::~Join() {
 
 ostream& Join::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');		
-	_os << "JOIN " << schemaOut.GetNoTuples() << "\n" << tabs << "├────>";
+	_os << "JOIN (" << schemaOut.GetNoTuples() << " tuples, " << schemaOut.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "├────>";
 	left->print(_os, depth+1);
 	_os << "\n" << tabs << "└────>";
 	right->print(_os, depth+1);
@@ -187,7 +187,7 @@ WriteOut::~WriteOut() {
 
 ostream& WriteOut::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
-	_os << "OUTPUT " << schema.GetNoTuples() << "\n" << tabs << "└────>";
+	_os << "OUTPUT (" << schema.GetNoTuples() << " tuples, "<< schema.GetNumAtts() << " atts)\n" << tabs << "└────>";
 	producer->print(_os, depth+1);
 	return _os;
 }

@@ -88,6 +88,7 @@ insert into tables values('region', 5, 'region.dat');
 insert into tables values('partsupp', 8000, 'partsupp.dat');
 insert into tables values('supplier', 100, 'supplier.dat');
 
+delete from Attributes;
 
 insert into attributes(tablename, position, name, type, noDistinct) values('customer', 0, 'c_custkey', 'INTEGER', 1500);
 insert into attributes(tablename, position, name, type, noDistinct) values('customer', 1, 'c_name', 'STRING', 1500);
@@ -141,7 +142,7 @@ insert into attributes(tablename, position, name, type, noDistinct) values('part
 insert into attributes(tablename, position, name, type, noDistinct) values('part', 8, 'p_comment', 'STRING', 2000);
 
 insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 0, 'ps_partkey', 'INTEGER', 2000);
-insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 1, 'ps_suppkey', 'INTEGER', 2000);
+insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 1, 'ps_suppkey', 'INTEGER', 100);
 insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 2, 'ps_availqty', 'INTEGER', 5497);
 insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 3, 'ps_supplycost', 'FLOAT', 7665);
 insert into attributes(tablename, position, name, type, noDistinct) values('partsupp', 4, 'ps_comment', 'STRING', 8000);

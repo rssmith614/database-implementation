@@ -85,7 +85,7 @@ lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --
 SELECT DISTINCT l_discount
 FROM customer, orders, lineitem, nation
 WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
-	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+	c_acctbal < 1000.0 AND 30 = l_quantity AND l_discount < 0.03
 
 
 nation -----------------------------------
@@ -361,7 +361,7 @@ FROM customer, orders, lineitem, nation, partsupp, part, supplier
 WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
 	l_partkey = ps_partkey AND l_suppkey = ps_suppkey AND
 	ps_partkey = p_partkey AND ps_suppkey = s_suppkey AND
-	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+	c_acctbal < 1000.0 AND 30 = l_quantity AND l_discount < 0.03
 
 
 nation (25) -----------------------------------

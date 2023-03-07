@@ -225,34 +225,30 @@ int Schema::Project(IntVector& _attsToKeep) {
 
 ostream& operator<<(ostream& _os, Schema& _c) {
 	_os << "(";
-	if (_c.atts.Length() <= 3) {
-		for(int i=0; i<_c.atts.Length(); i++) {
-			_os << _c.atts[i].name << ':';
+	for(int i=0; i<_c.atts.Length(); i++) {
+		_os << _c.atts[i].name << ':';
 
-			switch(_c.atts[i].type) {
-				case Integer:
-					_os << "INTEGER";
-					break;
-				case Float:
-					cout << "FLOAT";
-					break;
-				case String:
-					cout << "STRING";
-					break;
-				default:
-					cout << "UNKNOWN";
-					break;
-			}
-
-			_os << " [" << _c.atts[i].noDistinct << "]";
-			if (i < _c.atts.Length()-1) _os << ", ";
+		switch(_c.atts[i].type) {
+			case Integer:
+				_os << "INTEGER";
+				break;
+			case Float:
+				cout << "FLOAT";
+				break;
+			case String:
+				cout << "STRING";
+				break;
+			default:
+				cout << "UNKNOWN";
+				break;
 		}
-	} else {
-		_os << _c.atts.Length() << " attributes";
+
+		_os << " [" << _c.atts[i].noDistinct << "]";
+		if (i < _c.atts.Length()-1) _os << ", ";
 	}
 	_os << ")";
 
-	// _os << "[" << _c.noTuples << "] [" << _c.fPath << "]";
+	_os << "[" << _c.noTuples << "] [" << _c.fPath << "]";
 
 	return _os;
 }
