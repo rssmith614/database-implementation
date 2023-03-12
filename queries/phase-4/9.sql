@@ -1,4 +1,4 @@
-SELECT SUM(l_extendedprice * l_discount * (1.0-l_tax))
-FROM lineitem
-WHERE l_discount < 0.07 AND l_quantity < 12
+SELECT SUM(l_discount) 
+FROM customer, orders, lineitem
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND l_discount < 0.03
 

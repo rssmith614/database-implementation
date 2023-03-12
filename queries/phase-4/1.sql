@@ -1,5 +1,5 @@
-SELECT SUM(ps_supplycost), ps_suppkey
-FROM partsupp 
-WHERE ps_suppkey > -1
-GROUP BY ps_suppkey
+SELECT SUM(ps_supplycost), s_suppkey
+FROM part, supplier, partsupp 
+WHERE p_partkey = ps_partkey AND s_suppkey = ps_suppkey
+GROUP BY s_suppkey
 

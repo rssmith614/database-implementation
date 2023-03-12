@@ -1,5 +1,4 @@
-SELECT SUM(l_extendedprice * l_discount * (1.0-l_tax)), l_suppkey
+SELECT SUM(l_extendedprice * l_discount * (1.0-l_tax))
 FROM lineitem
-WHERE l_discount < 0.07 AND l_quantity < 12
-GROUP BY l_suppkey
+WHERE l_orderkey > -1
 

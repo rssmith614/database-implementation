@@ -36,17 +36,6 @@ int DBFile::Open (char* f_path) {
 	return 0;
 }
 
-void DBFile::Load (Schema& schema, char* textFile) {
-	currentPagePos = 0;
-	currentPage.EmptyItOut();
-
-	FILE* f = fopen(textFile, "rt");
-	Record rec;
-	while (rec.ExtractNextRecord (schema, *f)) {
-		AppendRecord(rec);
-	}
-}
-
 int DBFile::Close () {
 	return 0;
 }
@@ -54,6 +43,14 @@ int DBFile::Close () {
 void DBFile::MoveFirst () {
 	currentPagePos = 0;
 	file.GetPage(currentPage, currentPagePos);
+}
+
+int DBFile::GetNext (Record& rec) {
+	if (0 == currentPage.GetFirst(rec)) {
+		// move to the next page in File
+	}
+
+	return 1;
 }
 
 void DBFile::AppendRecord (Record& rec) {
@@ -64,10 +61,16 @@ void DBFile::AppendRecord (Record& rec) {
 	}
 }
 
-int DBFile::GetNext (Record& rec) {
-	if (0 == currentPage.GetFirst(rec)) {
-		// move to the next page in File
+void DBFile::Load (Schema& schema, char* textFile) {
+	currentPagePos = 0;
+	currentPage.EmptyItOut();
+
+	FILE* f = fopen(textFile, "rt");
+	
+	Record rec;
+	while (rec.ExtractNextRecord (schema, *f)) {
+		AppendRecord(rec);
 	}
 
-	return 1;
+	fclose(f);
 }
