@@ -16,8 +16,11 @@ int main (int argc, char* argv[]) {
 		return -1;
 	}
 
+	// record name
 	string table = argv[1];
+	// destination
 	string heapFile = argv[2];
+	// source
 	string textFile = argv[3];
 
 	SString catalogFile("catalog.sqlite");
@@ -25,6 +28,10 @@ int main (int argc, char* argv[]) {
 	cout << catalog << endl; cout.flush();
 
 	//write the code to load tuples from the text file to the heap file
+	// create record for table
+	// create file object
+	// while (ExtractNextRecord)
+		// 
 
 	return 0;
 }

@@ -57,11 +57,13 @@ Page structure
  - int : number of records [n] (4 bytes)
  - record 1
    0|ALGERIA|0| haggle. carefully final deposits detect slyly agai|
+  --  header
    - [0]  int (4 bytes) : length of record 1 [rl_1] --> [88]
    - [4]  int (4 bytes) : starting position (address, byte) of attribute 1 (n_nationkey) --> [20]
    - [8]  int (4 bytes) : starting position (address, byte) of attribute 2 (n_name) --> [24]
    - [12] int (4 bytes) : starting position (address, byte) of attribute 3 (n_regionkey) --> [32]
    - [16] int (4 bytes) : starting position (address, byte) of attribute 4 (n_comment) --> [36]
+  --  data
    - [20] int (4 bytes) : value of n_nationkey --> 0
    - [24] string (8 bytes) : value of n_name --> 'ALGERIA\0'
    - [32] int (4 bytes) : value of n_regionkey --> 0
@@ -74,9 +76,9 @@ Page structure
    - [12] int (4 bytes) : starting position (address, byte) of attribute 3 (n_regionkey) --> [34]
    - [16] int (4 bytes) : starting position (address, byte) of attribute 4 (n_comment) --> [38]
    - [20] int (4 bytes) : value of n_nationkey --> 1
-   - [24] string (8 bytes) : value of n_name --> 'ARGENTINA\0'
+   - [24] string (10 bytes) : value of n_name --> 'ARGENTINA\0'
    - [34] int (4 bytes) : value of n_regionkey --> 1
-   - [38] string (52 bytes) : value of n_comment --> 'al foxes promise slyly according to the regular accounts. bold requests alon\0'
+   - [38] string (77 bytes) : value of n_comment --> 'al foxes promise slyly according to the regular accounts. bold requests alon\0'
  - ...
  - record n
    - int : length of record n [rl_n] (4 bytes)
