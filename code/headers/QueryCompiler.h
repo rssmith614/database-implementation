@@ -22,7 +22,12 @@ private:
 	Catalog* catalog;
 	QueryOptimizer* optimizer;
 
-	map<pair<int, int>, int> joinCardialities;
+	void GreedyJoin(Schema* forestSchema, int& nTbl, AndList* _predicate, RelationalOp** forest);
+	void CreateScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* tables);
+	void CreateSelects(Schema* forestSchema, RelationalOp** forest, int nTbl, AndList* predicate);
+	void CreateGroupBy(Schema& saplingSchema, RelationalOp* &sapling, NameList* groupingAtts, FuncOperator* finalFunction);
+	void CreateFunction(Schema& saplingSchema, RelationalOp* &sapling, FuncOperator* finalFunction);
+	void CreateProject(Schema& saplingSchema, RelationalOp* &sapling, NameList* attsToSelect, int& distinctAtts);
 
 public:
 	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);

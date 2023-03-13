@@ -75,7 +75,7 @@ Project::Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
 }
 
 Project::~Project() {
-
+	delete producer;
 }
 
 ostream& Project::print(ostream& _os, int depth) {
@@ -114,6 +114,8 @@ NestedLoopJoin::NestedLoopJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema
 }
 
 NestedLoopJoin::~NestedLoopJoin() {
+	delete left;
+	delete right;
 }
 
 bool NestedLoopJoin::GetNext(Record& _record) {
@@ -127,7 +129,7 @@ DuplicateRemoval::DuplicateRemoval(Schema& _schema, RelationalOp* _producer) :
 }
 
 DuplicateRemoval::~DuplicateRemoval() {
-
+	delete producer;
 }
 
 ostream& DuplicateRemoval::print(ostream& _os, int depth) {
