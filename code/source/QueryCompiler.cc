@@ -1,5 +1,4 @@
 #include "QueryCompiler.h"
-#include "QueryOptimizer.h"
 #include "Schema.h"
 #include "ParseTree.h"
 #include "Record.h"
@@ -14,8 +13,7 @@
 using namespace std;
 
 
-QueryCompiler::QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer) :
-	catalog(&_catalog), optimizer(&_optimizer) {
+QueryCompiler::QueryCompiler(Catalog& _catalog) : catalog(&_catalog) {
 }
 
 QueryCompiler::~QueryCompiler() {

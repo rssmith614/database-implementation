@@ -11,7 +11,6 @@
  */
 #include "Catalog.h"
 #include "ParseTree.h"
-#include "QueryOptimizer.h"
 #include "RelOp.h"
 
 using namespace std;
@@ -20,7 +19,6 @@ using namespace std;
 class QueryCompiler {
 private:
 	Catalog* catalog;
-	QueryOptimizer* optimizer;
 
 	void GreedyJoin(Schema* forestSchema, int& nTbl, AndList* _predicate, RelationalOp** forest);
 	void CreateScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* tables);
@@ -30,7 +28,7 @@ private:
 	void CreateProject(Schema& saplingSchema, RelationalOp* &sapling, NameList* attsToSelect, int& distinctAtts);
 
 public:
-	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);
+	QueryCompiler(Catalog& _catalog);
 	virtual ~QueryCompiler();
 
 	void Compile(TableList* _tables, NameList* _attsToSelect,

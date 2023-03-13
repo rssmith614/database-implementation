@@ -1,7 +1,9 @@
 -- SQL statements can have one of two signatures
 -- CAPS are terminal statements, others are non-terminals, must be defined recursively
 SQL ::= SELECT SelectAtts FROM Tables WHERE AndList |
-        SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts 
+        SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts |
+        SELECT SelectAtts FROM Tables WHERE AndList ORDER BY Atts |
+        SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts ORDER BY Atts
 
 THE LAWS OF QUERY EXECUTION
 1. must always have select or join
@@ -10,12 +12,21 @@ THE LAWS OF QUERY EXECUTION
 
 -- recursive definition of non-terminal Tables
 -- YY_NAME is a terminal
+
 Tables ::= YY_NAME | Tables ',' YY_NAME
 
 SelectAtts ::= Function ',' Atts | Function | Atts | DISTINCT Atts 
 Atts ::= YY_NAME | Atts ',' YY_NAME 
 
-Function ::= SUM '(' CompoundExp ')' 
+Function ::= SUM '(' CompoundExp ')'
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Function ::= SUM '(' CompoundExp ')' | COUNT '(' CompoundExp ')' | AVERAGE '(' CompoundExp ')'
+
+Function ::= FuncType '(' CompoundExp ')'
+FuncType ::= SUM | COUNT | AVERAGE | MIN | MAX 
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 CompoundExp ::= SimpleExp Op CompoundExp | '(' CompoundExp ')' Op CompoundExp |
  		       '(' CompoundExp ')' | SimpleExp | '-' CompoundExp 
 
@@ -27,6 +38,7 @@ SimpleExp ::= YY_FLOAT | YY_INTEGER | YY_NAME
 
 AndList ::= Condition | Condition AND AndList 
 Condition ::= Literal BoolComp Literal 
+
 
 
 TableList* tables = {}; // the list of tables in the query

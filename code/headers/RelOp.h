@@ -103,7 +103,7 @@ public:
 		int _numAttsOutput, int* _keepMe, RelationalOp* _producer);
 	virtual ~Project();
 
-	virtual bool GetNext(Record& _record) {return false;}
+	virtual bool GetNext(Record& _record);
 
 	virtual ostream& print(ostream& _os, int depth);
 };
@@ -161,7 +161,7 @@ public:
 	DuplicateRemoval(Schema& _schema, RelationalOp* _producer);
 	virtual ~DuplicateRemoval();
 
-	virtual bool GetNext(Record& _record) {return false;}
+	virtual bool GetNext(Record& _record);
 
 	virtual ostream& print(ostream& _os, int depth);
 };
@@ -184,7 +184,7 @@ public:
 		RelationalOp* _producer);
 	virtual ~Sum();
 
-	virtual bool GetNext(Record& _record) {return false;}
+	virtual bool GetNext(Record& _record);
 
 	virtual ostream& print(ostream& _os, int depth);
 };
@@ -209,7 +209,7 @@ public:
 		Function& _compute,	RelationalOp* _producer);
 	virtual ~GroupBy();
 
-	virtual bool GetNext(Record& _record) {return false;}
+	virtual bool GetNext(Record& _record);
 
 	virtual ostream& print(ostream& _os, int depth);
 };
@@ -229,7 +229,7 @@ public:
 	WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer);
 	virtual ~WriteOut();
 
-	virtual bool GetNext(Record& _record) {return false;}
+	virtual bool GetNext(Record& _record);
 
 	virtual ostream& print(ostream& _os, int depth);
 };
@@ -240,11 +240,13 @@ private:
 	RelationalOp* root;
 
 public:
-	QueryExecutionTree() {}
-	virtual ~QueryExecutionTree();
+	QueryExecutionTree() : root(0) {}
+	virtual ~QueryExecutionTree() {}
 
-	void ExecuteQuery() {}
 	void SetRoot(RelationalOp& _root) {root = &_root;}
+	RelationalOp& GetRoot() {return *root;}
+
+	void ExecuteQuery();
 
     friend ostream& operator<<(ostream& _os, QueryExecutionTree& _op);
 };

@@ -39,7 +39,10 @@ public:
 	void GrowFromParseTree (FuncOperator* parseTree, Schema& mySchema);
 
 	// applies the function to the given record and returns the result
-	Type Apply (Record& toMe, int& intResult, double &doubleResult);
+	Type Apply (Record& toMe, int& intResult, double& doubleResult);
+
+	// get the type of the result aggregate
+	int ReturnsInt() {return (returnsInt != 0);}
 };
 
 #endif // _FUNCTION_H

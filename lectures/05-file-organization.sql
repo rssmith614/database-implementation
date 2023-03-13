@@ -109,3 +109,37 @@ for (int i = 0; i < 2000000000; i++) {
   a[j] = i;
 }
 
+
+orders
+insert into attributes values('orders', 0, 'o_orderkey', 'INTEGER', 15000);
+insert into attributes values('orders', 1, 'o_custkey', 'INTEGER', 1000);
+insert into attributes values('orders', 2, 'o_orderstatus', 'STRING', 3);
+insert into attributes values('orders', 3, 'o_totalprice', 'FLOAT', 14996);
+insert into attributes values('orders', 4, 'o_orderdate', 'STRING', 2401);
+insert into attributes values('orders', 5, 'o_orderpriority', 'STRING', 5);
+insert into attributes values('orders', 6, 'o_clerk', 'STRING', 1000);
+insert into attributes values('orders', 7, 'o_shippriority', 'STRING', 1);
+insert into attributes values('orders', 8, 'o_comment', 'STRING', 15000);
+
+39|818|O|326565.37|1996-09-20|3-MEDIUM|Clerk#000000659|0|ole express, ironic requests: ir|
+  - [0]  int (4 bytes) : length of record 1 [rl_2] --> [129]
+  - [4]  int (4 bytes) : starting position (address, byte) of attribute 1 (o_orderkey) --> [40]
+  - [8]  int (4 bytes) : starting position (address, byte) of attribute 2 (o_custkey) --> [44]
+  - [12] int (4 bytes) : starting position (address, byte) of attribute 3 (o_orderstatus) --> [48]
+  - [16] int (4 bytes) : starting position (address, byte) of attribute 4 (o_totalprice) --> [50]
+  - [20] int (4 bytes) : starting position (address, byte) of attribute 4 (o_orderdate) --> [58]
+  - [24] int (4 bytes) : starting position (address, byte) of attribute 4 (o_orderpriority) --> [69]
+  - [28] int (4 bytes) : starting position (address, byte) of attribute 4 (o_clerk) --> [78]
+  - [32] int (4 bytes) : starting position (address, byte) of attribute 4 (o_shippriority) --> [94]
+  - [36] int (4 bytes) : starting position (address, byte) of attribute 4 (o_comment) --> [96]
+  - [40] int (4 bytes) : value of o_orderkey --> 39
+  - [44] string (10 bytes) : value of o_custkey --> 818
+  - [48] int (4 bytes) : value of o_orderstatus --> 'O\0'
+  - [50] string (77 bytes) : value of o_totalprice --> 326565.37
+  - [58] string (77 bytes) : value of o_orderdate --> '1996-09-20\0'
+  - [69] string (77 bytes) : value of o_orderpriority --> '3-MEDIUM\0'
+  - [78] string (77 bytes) : value of o_clerk --> 'Clerk#000000659\0'
+  - [94] string (77 bytes) : value of o_shippriority --> '0\0'
+  - [96] string (77 bytes) : value of o_comment --> 'ole express, ironic requests: ir\0'
+
+- column-store databases

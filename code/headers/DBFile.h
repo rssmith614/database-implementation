@@ -29,11 +29,11 @@ public:
 	int Open (char* fpath);
 	int Close ();
 
-	void Load (Schema& _schema, char* textFile);
-
 	void MoveFirst ();
-	void AppendRecord (Record& _addMe);
 	int GetNext (Record& _fetchMe);
+
+	void AppendRecord (Record& _addMe);
+	void Load (Schema& _schema, char* textFile);
 };
 
 #endif //DBFILE_H

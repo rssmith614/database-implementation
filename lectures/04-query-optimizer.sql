@@ -97,6 +97,28 @@ orders --------------------------------------------------------										|
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --
 
 
+SELECT DISTINCT l_discount
+FROM nation, customer, orders, lineitem
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+
+nation -----------------------------------
+										  |-- join -----------------------  (25*1500)
+customer -- selection(c_acctbal < 1000) --								  |							
+																		  | -- join	--  (1500*15000)					
+orders -------------------------------------------------------------------			  |
+															   						  | -- join (15000*60175)
+lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
+
+25*1500 + 1500*15000 + 15000*60175
+
+nation -----------------------------------
+										  |-- join -----------------------  (25*500)
+customer -- selection(c_acctbal < 1000) --  (500)						  |							
+																		  | -- join	--  (500*15000)					
+orders -------------------------------------------------------------------			  |
+															   						  | -- join (5000*400)
+lineitem -- selection(30 = l_quantity AND l_discount < 0.03)  (400)-------------------
 
 
 nation -----------------------------------
@@ -108,6 +130,12 @@ orders --------------------------------------------------------			  |
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --  (1)
 
 
+
+SELECT DISTINCT l_discount
+FROM customer, orders, lineitem, nation
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
+
 customer -- selection(c_acctbal < 1000) --
 										  | -- join -----------  (1500*15000)
 orders -----------------------------------					   |
@@ -116,6 +144,13 @@ lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --			   |
 																		   | -- join  (60175*25)
 nation --------------------------------------------------------------------
 
+1500*15000 + 15000*60175 + 60175*25
+
+
+SELECT DISTINCT l_discount
+FROM customer, orders, nation, lineitem
+WHERE c_custkey = o_custkey AND o_orderkey = l_orderkey AND c_nationkey = n_nationkey AND
+	c_acctbal < 1000 AND 30 = l_quantity AND l_discount < 0.03
 
 customer -- selection(c_acctbal < 1000) --
 										  | -- join -----------  (1500*15000)
@@ -125,32 +160,12 @@ nation --------------------------------------------------------			   |
 																		   | -- join  (15000*60175)
 lineitem -- selection(30 = l_quantity AND l_discount < 0.03) --------------
 
-
-nation -----------------------------------
-										  |-- join -----------------------  (25*1500)
-customer -- selection(c_acctbal < 1000) --								  |							
-																		  | -- join	--  (1500*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (15000*60175)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
+1500*15000 + 15000*25 + 60175*15000
 
 
-nation -----------------------------------
-										  |-- join -----------------------  (25*1)
-customer -- selection(c_acctbal < 1000) --  (1)							  |							
-																		  | -- join	--  (1*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (15000*60175)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03) -------------------------
-
-
-nation -----------------------------------
-										  |-- join -----------------------  (25*500)
-customer -- selection(c_acctbal < 1000) --  (500)						  |							
-																		  | -- join	--  (500*15000)					
-orders -------------------------------------------------------------------			  |
-															   						  | -- join (5000*400)
-lineitem -- selection(30 = l_quantity AND l_discount < 0.03)  (400)-------------------
+1500*15000 +  25*1500 + 15000*60175
+1500*15000 + 60175*25 + 15000*60175
+1500*15000 + 15000*25 + 15000*60175
 
 
 
@@ -199,7 +214,7 @@ nation (25) -----------------------------------
 customer (1500) -- selection(c_acctbal < 1000) (500)						  							
 																		  
 orders (15000) -------------------------------------------------------------------			  
-															   					 | -- join(o_orderkey = l_orderkey)
+															   					 | -- join(o_orderkey = l_orderkey) (400)
 lineitem (60175) -- selection(30 = l_quantity AND l_discount < 0.03) (400) -------
 
 output schema of join(o_orderkey = l_orderkey)
@@ -306,7 +321,7 @@ orders (15000)
 customer (1500)
 
 nation (25) --
-			 | -- join(n_regionkey = r_regionkey) -- (n_nationkey, n_regionkey, r_regionkey) Project[n_nationkey]
+			 | -- join(n_regionkey = r_regionkey) -- (n_nationkey, n_regionkey, r_regionkey) Project[n_nationkey] (25)
 region (5) ---
 
 
@@ -504,3 +519,151 @@ partsupp (8000) -------------------------------------------------------------
 part (2000)
 
 supplier (100)
+
+
+
+SELECT DISTINCT c_name 
+FROM lineitem, orders, customer, nation, region
+WHERE l_orderkey = o_orderkey AND o_custkey = c_custkey AND 
+	c_nationkey = n_nationkey AND n_regionkey = r_regionkey AND r_name = 'EUROPE' AND o_orderstatus = 'O' AND
+	o_orderpriority = '1-URGENT' AND l_shipdate > '1995-10-10' AND l_shipdate < '1995-10-15'
+
+insert into attributes values('lineitem', 0, 'l_orderkey', 'INTEGER', 15000);
+insert into attributes values('lineitem', 10, 'l_shipdate', 'STRING', 2518);
+
+insert into attributes values('orders', 0, 'o_orderkey', 'INTEGER', 15000);
+insert into attributes values('orders', 1, 'o_custkey', 'INTEGER', 1000);
+insert into attributes values('orders', 2, 'o_orderstatus', 'STRING', 3);
+insert into attributes values('orders', 5, 'o_orderpriority', 'STRING', 5);
+
+insert into attributes values('customer', 0, 'c_custkey', 'INTEGER', 1500);
+insert into attributes values('customer', 3, 'c_nationkey', 'INTEGER', 25);
+
+insert into attributes values('nation', 0, 'n_nationkey', 'INTEGER', 25);
+insert into attributes values('nation', 2, 'n_regionkey', 'INTEGER', 5);
+
+insert into attributes values('region', 0, 'r_regionkey', 'INTEGER', 5);
+insert into attributes values('region', 1, 'r_name', 'STRING', 5);
+
+
+lineitem[60175] -- select(l_shipdate > '1995-10-10' AND l_shipdate < '1995-10-15')[60175 / (3 * 3) = 6687]
+
+orders[15000] -- select(o_orderstatus = 'O' AND o_orderpriority = '1-URGENT')[15000 / (3 * 5) = 1000]
+
+customer[1500]
+
+nation[25]
+
+region[5] -- select(r_name = 'EUROPE')[5 / 5 = 1]
+
+
+MapD(GPU database)
+- sort tables in decreasing order of their size and build joins in that order
+- left-deep tree
+
+lineitem -------
+			   | -- join(l_orderkey = o_orderkey) ------
+orders ---------									   |
+													   | -- join(o_custkey = c_custkey) ------
+													   |									 |
+customer -----------------------------------------------									 | -- join(c_nationkey = n_nationkey) -----
+																							 |										  |
+nation ---------------------------------------------------------------------------------------										  |
+																																	  |
+region --------------------------------------------------------------------------------------------------------------------------------
+
+
+Greedy left-deep tree
+
+region -- nation -- customer -- orders -- lineitem [chain query]
+
+Step 0
+------
+Joins considered
+customer -- nation (c_nationkey = n_nationkey) --> (1500 * 25) / max(25, 25) = 1500
+orders -- lineitem (o_orderkey = l_orderkey) --> (1000 * 6687) / max(15000, 15000) = 446
+customer -- orders (c_custkey = o_custkey) --> (1500 * 1000) / max(1500, 1000) = 1000
+nation -- region (n_regionkey = r_regionkey) --> (25 * 1) / max(5, 5) = 5
+
+Choose: nation join region on (n_regionkey = r_regionkey)
+
+
+Step 1
+------
+Joins considered
+(nation -- region) -- customer
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+
+
+Step 2
+------
+Joins considered
+((nation -- region) -- customer) -- orders
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+			join orders on (c_custkey = o_custkey)
+
+
+Step 3
+------
+Joins considered
+(((nation -- region) -- customer) -- orders) -- lineitem
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+			join orders on (c_custkey = o_custkey) join lineitem on (o_orderkey = l_orderkey)
+
+
+Greedy bushy tree
+
+((nation join region on (n_regionkey = r_regionkey)) join
+(customer join orders on (c_custkey = o_custkey)) on (c_nationkey = n_nationkey)) join
+lineitem on (o_orderkey = l_orderkey)
+
+
+region
+		-- join -----
+nation
+					-- join ---
+customer 
+		-- join ----			-- join
+orders 
+		-----------------------
+lineitem
+
+Step 0
+------
+Joins considered
+customer -- nation (c_nationkey = n_nationkey) --> (1500 * 25) / max(25, 25) = 1500
+orders -- lineitem (o_orderkey = l_orderkey) --> (1000 * 6687) / max(15000, 15000) = 446
+customer -- orders (c_custkey = o_custkey) --> (1500 * 1000) / max(1500, 1000) = 1000
+nation -- region (n_regionkey = r_regionkey) --> (25 * 1) / max(5, 5) = 5
+
+Choose: nation join region on (n_regionkey = r_regionkey)
+
+Step 1
+------
+Joins considered
+(nation -- region) -- customer (c_nationkey = n_nationkey) --> (5 * 1500) / max(25, 25) = 300
+orders -- lineitem (o_orderkey = l_orderkey) --> (1000 * 6687) / max(15000, 15000) = 446
+customer -- orders (c_custkey = o_custkey) --> (1500 * 1000) / max(1500, 1000) = 1000
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+
+Step 2
+------
+Joins considered
+((nation -- region) -- customer) -- orders (c_custkey = o_custkey) --> (300 * 1500) / max(1500, 1000) = 300
+orders -- lineitem (o_orderkey = l_orderkey) --> (1000 * 6687) / max(15000, 15000) = 446
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+			join orders on (c_custkey = o_custkey)
+
+Step 3
+------
+Joins considered
+(((nation -- region) -- customer) -- orders) -- lineitem (o_orderkey = l_orderkey)
+
+Choose: (nation join region on (n_regionkey = r_regionkey)) join customer on (c_nationkey = n_nationkey)
+			join orders on (c_custkey = o_custkey) join lineitem on (o_orderkey = l_orderkey)
+

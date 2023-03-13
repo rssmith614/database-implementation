@@ -21,9 +21,6 @@ Scan::~Scan() {
 }
 
 bool Scan::GetNext(Record& _record) {
-	int ret = file.GetNext(_record);
-	if (1 == ret) return true;
-
 	return false;
 }
 
@@ -35,8 +32,6 @@ ostream& Scan::print(ostream& _os, int depth) {
 
 Select::Select(Schema& _schema, CNF& _predicate, Record& _constants,
 	RelationalOp* _producer)
-	// schema(_schema), predicate(_predicate), constants(constants),
-	// producer(_producer) 
 	{
 
 	schema = _schema;
@@ -51,12 +46,7 @@ Select::~Select() {
 }
 
 bool Select::GetNext(Record& _record) {
-	while (true) {
-		bool ret = producer->GetNext(_record);
-		if (false == ret) return false;
-
-		if (true == predicate.Run(_record, constants)) return true;
-	}
+	return false;	
 }
 
 ostream& Select::print(ostream& _os, int depth) {
@@ -76,6 +66,10 @@ Project::Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
 
 Project::~Project() {
 	delete producer;
+}
+
+bool Project::GetNext(Record& _record) {
+	return false;
 }
 
 ostream& Project::print(ostream& _os, int depth) {
@@ -132,6 +126,10 @@ DuplicateRemoval::~DuplicateRemoval() {
 	delete producer;
 }
 
+bool DuplicateRemoval::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& DuplicateRemoval::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
 	_os << "DISTINCT\n" << tabs << "└────>";
@@ -149,6 +147,10 @@ Sum::Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
 
 Sum::~Sum() {
 	delete producer;
+}
+
+bool Sum::GetNext(Record& _record) {
+	return false;
 }
 
 ostream& Sum::print(ostream& _os, int depth) {
@@ -170,6 +172,10 @@ GroupBy::~GroupBy() {
 	delete producer;
 }
 
+bool GroupBy::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& GroupBy::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
 	_os << "GROUP BY " << groupingAtts << "\n" << tabs << "└────>";
@@ -187,6 +193,10 @@ WriteOut::~WriteOut() {
 	delete producer;
 }
 
+bool WriteOut::GetNext(Record& _record) {
+	return false;
+}
+
 ostream& WriteOut::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
 	_os << "OUTPUT (" << schema.GetNoTuples() << " tuples, "<< schema.GetNumAtts() << " atts)\n" << tabs << "└────>";
@@ -194,6 +204,8 @@ ostream& WriteOut::print(ostream& _os, int depth) {
 	return _os;
 }
 
+void QueryExecutionTree::ExecuteQuery() {
+}
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
 	_os << "QUERY EXECUTION TREE\n";
