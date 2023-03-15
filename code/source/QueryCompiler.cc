@@ -106,9 +106,17 @@ void QueryCompiler::CreateScans(Schema* forestSchema, RelationalOp** forest, int
 			if (ret) {
 				forestSchema[idx].SetDistincts(att, noDist);
 			}
+			SString fPath;
+			ret = catalog->GetDataFile(s, fPath);
+			if (ret) {
+				forestSchema[idx].SetDataFile(fPath);
+			}
 		}
 
+		SString dbFileLoc;
+		catalog->GetDataFile(s, dbFileLoc);
 		DBFile dbFile;
+		dbFile.Open((char*)((string) dbFileLoc).c_str());
 		forest[idx] = new Scan(forestSchema[idx], dbFile, s);
 		idx += 1;
 	}
@@ -293,162 +301,109 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	
 	CreateScans(forestSchema, forest, nTbl, _tables);
 
-	cout << "SCANS" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	// cout << "SCANS" << endl;
+	// cout << "+++++++++++++++++++++++" << endl;
+	// for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
 	// push-down selections: create a SELECT operator wherever necessary
 	// needed when predicate compares table attribute with constant or another attribute from same table
-	CreateSelects(forestSchema, forest, nTbl, _predicate);
+	// CreateSelects(forestSchema, forest, nTbl, _predicate);
 
-	cout << endl << "PUSH DOWN SELECTION" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	// // cout << endl << "PUSH DOWN SELECTION" << endl;
+	// // cout << "+++++++++++++++++++++++" << endl;
+	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
-	// all attributes needed from SELECT clause
-	for (NameList* name = _attsToSelect; name != NULL; name = name->next) {
-		neededAtts.insert(name->name);
-	}
-	if (_groupingAtts != NULL) {
-		for (NameList* name = _groupingAtts; name != NULL; name = name->next) {
-			neededAtts.insert(name->name);
-		}
-	}
+	// // all attributes needed from SELECT clause
+	// for (NameList* name = _attsToSelect; name != NULL; name = name->next) {
+	// 	neededAtts.insert(name->name);
+	// }
+	// if (_groupingAtts != NULL) {
+	// 	for (NameList* name = _groupingAtts; name != NULL; name = name->next) {
+	// 		neededAtts.insert(name->name);
+	// 	}
+	// }
 
-	// all attributes needed from WHERE clause
-	// DFS on parse tree
-	vector<AndList*> s;
-	s.push_back(_predicate);
-	while (!s.empty()) {
-		AndList* cur = s.back(); s.pop_back();
-		// only want attribute names, no constants
-		if (cur->left->left->code == 3 /*YY_NAME*/) {
-			neededAtts.insert(cur->left->left->value);
-		}
-		if (cur->left->right->code == 3 /*YY_NAME*/) {
-			neededAtts.insert(cur->left->right->value);
-		}
-		if (cur->rightAnd != NULL) {
-			s.push_back(cur->rightAnd);
-		}
-	}
+	// // all attributes needed from WHERE clause
+	// // DFS on parse tree
+	// vector<AndList*> s;
+	// s.push_back(_predicate);
+	// while (!s.empty()) {
+	// 	AndList* cur = s.back(); s.pop_back();
+	// 	// only want attribute names, no constants
+	// 	if (cur->left->left->code == 3 /*YY_NAME*/) {
+	// 		neededAtts.insert(cur->left->left->value);
+	// 	}
+	// 	if (cur->left->right->code == 3 /*YY_NAME*/) {
+	// 		neededAtts.insert(cur->left->right->value);
+	// 	}
+	// 	if (cur->rightAnd != NULL) {
+	// 		s.push_back(cur->rightAnd);
+	// 	}
+	// }
 
-	// create a proejction for every table
-	for (int i=0; i < nTbl; i++) {
-		Schema schemaIn = forestSchema[i];
-		int numAttsInput = schemaIn.GetNumAtts();
-		IntVector keepMe;
-		for (int j=0; j < numAttsInput; j++) {
-			string currentAtt = schemaIn.GetAtts()[j].name;
-			// keep only attributes needed by the query
-			if (neededAtts.find(currentAtt) != neededAtts.end()) {
-				SInt idx(j);
-				keepMe.Append(idx);
-			}
-		}
-		Schema schemaOut = schemaIn;
-		schemaOut.Project(keepMe);
-		int numAttsOutput = keepMe.Length();
+	// // create a proejction for every table
+	// for (int i=0; i < nTbl; i++) {
+	// 	Schema schemaIn = forestSchema[i];
+	// 	int numAttsInput = schemaIn.GetNumAtts();
+	// 	IntVector keepMe;
+	// 	for (int j=0; j < numAttsInput; j++) {
+	// 		string currentAtt = schemaIn.GetAtts()[j].name;
+	// 		// keep only attributes needed by the query
+	// 		if (neededAtts.find(currentAtt) != neededAtts.end()) {
+	// 			SInt idx(j);
+	// 			keepMe.Append(idx);
+	// 		}
+	// 	}
+	// 	Schema schemaOut = schemaIn;
+	// 	schemaOut.Project(keepMe);
+	// 	int numAttsOutput = keepMe.Length();
 
-		// Project constructor takes int*, not IntVector
-		int* keepMe_intv = new int[numAttsOutput];
-		for (int i=0; i<numAttsOutput; i++) {
-			keepMe_intv[i] = keepMe[i];
-		}
-		RelationalOp* producer = forest[i];
-		forest[i] = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
+	// 	// Project constructor takes int*, not IntVector
+	// 	int* keepMe_intv = new int[numAttsOutput];
+	// 	for (int i=0; i<numAttsOutput; i++) {
+	// 		keepMe_intv[i] = keepMe[i];
+	// 	}
+	// 	RelationalOp* producer = forest[i];
+	// 	forest[i] = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
 
-		forestSchema[i].Swap(schemaOut);
-	}
+	// 	forestSchema[i].Swap(schemaOut);
+	// }
 
-	cout << endl << "PUSH DOWN PROJECTION" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	// // cout << endl << "PUSH DOWN PROJECTION" << endl;
+	// // cout << "+++++++++++++++++++++++" << endl;
+	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
-	// create join operators based on the optimal order computed by the optimizer
-	// need nTbl - 1 Join operators
-	GreedyJoin(forestSchema, nTbl, _predicate, forest);
+	// // after joins, 
+	// RelationalOp* sapling = forest[0];
+	// Schema saplingSchema = forestSchema[0];
 
-	cout << endl << "JOINS" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	// // create join operators based on the optimal order computed by the optimizer
+	// // need nTbl - 1 Join operators
+	// GreedyJoin(forestSchema, nTbl, _predicate, forest);
 
-	// after joins, 
-	RelationalOp* sapling = forest[0];
-	Schema saplingSchema = forestSchema[0];
+	// // cout << endl << "JOINS" << endl;
+	// // cout << "+++++++++++++++++++++++" << endl;
+	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 	
-	// create the remaining operators based on the query
-	if (_groupingAtts != NULL) {
-		CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
-	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
-		CreateFunction(saplingSchema, sapling, _finalFunction);
-	} else {
-		CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
-	}
+	// // create the remaining operators based on the query
+	// if (_groupingAtts != NULL) {
+	// 	CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
+	// } else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
+	// 	CreateFunction(saplingSchema, sapling, _finalFunction);
+	// } else {
+	// 	CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
+	// }
 
-	// create a proejction for every table
-	for (int i=0; i < nTbl; i++) {
-		Schema schemaIn = forestSchema[i];
-		int numAttsInput = schemaIn.GetNumAtts();
-		IntVector keepMe;
-		for (int j=0; j < numAttsInput; j++) {
-			string currentAtt = schemaIn.GetAtts()[j].name;
-			// keep only attributes needed by the query
-			if (neededAtts.find(currentAtt) != neededAtts.end()) {
-				SInt idx(j);
-				keepMe.Append(idx);
-			}
-		}
-		Schema schemaOut = schemaIn;
-		schemaOut.Project(keepMe);
-		int numAttsOutput = keepMe.Length();
+	// // cout << "GROUP BY, FUNCTION, OR PROJECT" << endl;
+	// // cout << "+++++++++++++++++++++++++++++" << endl;
+	// // cout << *sapling << endl;
 
-		// Project constructor takes int*, not IntVector
-		int* keepMe_intv = new int[numAttsOutput];
-		for (int i=0; i<numAttsOutput; i++) {
-			keepMe_intv[i] = keepMe[i];
-		}
-		RelationalOp* producer = forest[i];
-		forest[i] = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
-
-		forestSchema[i].Swap(schemaOut);
-	}
-
-	cout << endl << "PUSH DOWN PROJECTION" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
-
-	// create join operators based on the optimal order computed by the optimizer
-	// need nTbl - 1 Join operators
-	GreedyJoin(forestSchema, nTbl, _predicate, forest);
-
-	cout << endl << "JOINS" << endl;
-	cout << "+++++++++++++++++++++++" << endl;
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
-
-	// after joins, 
-	RelationalOp* sapling = forest[0];
-	Schema saplingSchema = forestSchema[0];
-	
-	// create the remaining operators based on the query
-	if (_groupingAtts != NULL) {
-		CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
-	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
-		CreateFunction(saplingSchema, sapling, _finalFunction);
-	} else {
-		CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
-	}
-
-	cout << "GROUP BY, FUNCTION, OR PROJECT" << endl;
-	cout << "+++++++++++++++++++++++++++++" << endl;
-	cout << *sapling << endl;
-
-	// connect everything in the query execution tree and return
-	// The root will be a WriteOut operator
-	// _outfile is path to text file where query results are printed
-	string outfile = "output.txt";
-	sapling = new WriteOut(saplingSchema, outfile, sapling);
-	_queryTree.SetRoot(*sapling);
+	// // connect everything in the query execution tree and return
+	// // The root will be a WriteOut operator
+	// // _outfile is path to text file where query results are printed
+	// string outfile = "output.txt";
+	// sapling = new WriteOut(saplingSchema, outfile, sapling);
+	_queryTree.SetRoot(*forest[0]);
 
 	// free the memory occupied by the parse tree since it is not necessary anymore
 	delete [] forest;

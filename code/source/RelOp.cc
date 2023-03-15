@@ -21,6 +21,10 @@ Scan::~Scan() {
 }
 
 bool Scan::GetNext(Record& _record) {
+	if (0 != file.GetNext(_record)) {
+		_record.print(cout, schema);
+		return true;
+	}
 	return false;
 }
 
@@ -205,6 +209,9 @@ ostream& WriteOut::print(ostream& _os, int depth) {
 }
 
 void QueryExecutionTree::ExecuteQuery() {
+	Record r;
+	root->GetNext(r);
+	
 }
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
@@ -213,6 +220,6 @@ ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
 	return _os;
 }
 
-QueryExecutionTree::~QueryExecutionTree() {
-	delete root;
-}
+// QueryExecutionTree::~QueryExecutionTree() {
+// 	delete root;
+// }

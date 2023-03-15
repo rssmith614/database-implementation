@@ -6,6 +6,7 @@
 
 #include "Schema.h"
 #include "Catalog.h"
+#include "DBFile.h"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ int main (int argc, char* argv[]) {
 
 	// record name
 	string table = argv[1];
+	SString tName(table);
 	// destination
 	string heapFile = argv[2];
 	// source
@@ -28,10 +30,17 @@ int main (int argc, char* argv[]) {
 	cout << catalog << endl; cout.flush();
 
 	//write the code to load tuples from the text file to the heap file
-	// create record for table
-	// create file object
-	// while (ExtractNextRecord)
-		// 
-
+	// extract schema from catalog
+	Schema schema;
+	bool ret = catalog.GetSchema(tName, schema);
+	if (false == ret) {
+		cerr << "Error: table " << table << " does not exist in the database" << endl;
+	}
+	// create DBFile object
+	DBFile dbFile;
+	dbFile.Create((char*) heapFile.c_str(), Heap);
+	dbFile.Load(schema, (char*) textFile.c_str());
+	dbFile.Close();
+	
 	return 0;
 }
