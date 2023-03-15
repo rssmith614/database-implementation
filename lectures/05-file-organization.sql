@@ -171,3 +171,17 @@ file [(n+1) * 128KB]
   - page[2] // 256KB
   ...
   - page[n] // n * 128KB
+
+
+- bulk loading is implemented in DBFile.Load(Schema& _schema, char* textFile)
+  - open text file: FILE *f = fopen(textFile, "rt")
+  - while (Record r.ExtractNextRecord (_schema, f)) {
+    - if (0 == currentPage.Append(r)) {
+      file.AddPage(currentPage, currentPagePos)
+      currentPage.EmptyItOut()
+      currentPagePos += 1
+
+      currentPage.Append(r)
+    }
+  }
+  - fclose(f)
