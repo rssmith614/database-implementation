@@ -7,7 +7,7 @@ using namespace std;
 /* This file contains global definitions used throughout the project.
  */
 
-// page size in database file
+// page size in database file // 128KB = 2^17 B
 #define PAGE_SIZE 131072
 
 // pipe buffer size
