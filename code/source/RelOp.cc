@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stack>
 #include "RelOp.h"
 
@@ -20,9 +21,9 @@ Scan::~Scan() {
 
 }
 
+// returns true when record was retrieved
 bool Scan::GetNext(Record& _record) {
-	if (0 != file.GetNext(_record)) {
-		_record.print(cout, schema);
+	if (0 == file.GetNext(_record)) {
 		return true;
 	}
 	return false;
@@ -50,6 +51,11 @@ Select::~Select() {
 }
 
 bool Select::GetNext(Record& _record) {
+	while (producer->GetNext(_record)) {
+		if (predicate.Run(_record, constants)) {
+			return true;
+		}
+	}
 	return false;	
 }
 
@@ -198,6 +204,17 @@ WriteOut::~WriteOut() {
 }
 
 bool WriteOut::GetNext(Record& _record) {
+	// create output text file
+	ofstream f(outFile, ios::out | ios::trunc);
+	if (!f.is_open()) {
+		cerr << "Couldn't open output file " << outFile << endl;
+	}
+	while (producer->GetNext(_record)) {
+		// append record to file
+		_record.print(f, schema);
+		f << '\n';
+	}
+
 	return false;
 }
 
@@ -210,8 +227,7 @@ ostream& WriteOut::print(ostream& _os, int depth) {
 
 void QueryExecutionTree::ExecuteQuery() {
 	Record r;
-	root->GetNext(r);
-	
+	while (root->GetNext(r));
 }
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {

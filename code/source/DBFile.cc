@@ -63,14 +63,28 @@ void DBFile::MoveFirst () {
 	file.GetPage(currentPage, currentPagePos);
 }
 
+// returns 0 if record was retrieved
 int DBFile::GetNext (Record& rec) {
+	// look for the next record
 	if (0 == currentPage.GetFirst(rec)) {
-		// move to the next page in File
-		file.GetPage(currentPage, ++currentPagePos);
-		currentPage.GetFirst(rec);
+		// move to the next page
+		currentPagePos++;
+		// check if there are any pages left
+		if (currentPagePos == file.GetLength()) {
+			return 1;
+		}
+		// get the next page in File
+		if (0 == file.GetPage(currentPage, currentPagePos)) {
+			// look for next record
+			if (0 == currentPage.GetFirst(rec)) {
+				return 1;
+			}
+		} else {
+			return 1;
+		}
 	}
 
-	return 1;
+	return 0;
 }
 
 void DBFile::AppendRecord (Record& rec) {

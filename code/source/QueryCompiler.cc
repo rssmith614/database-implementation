@@ -307,7 +307,7 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 
 	// push-down selections: create a SELECT operator wherever necessary
 	// needed when predicate compares table attribute with constant or another attribute from same table
-	// CreateSelects(forestSchema, forest, nTbl, _predicate);
+	CreateSelects(forestSchema, forest, nTbl, _predicate);
 
 	// // cout << endl << "PUSH DOWN SELECTION" << endl;
 	// // cout << "+++++++++++++++++++++++" << endl;
@@ -373,9 +373,9 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// // cout << "+++++++++++++++++++++++" << endl;
 	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
-	// // after joins, 
-	// RelationalOp* sapling = forest[0];
-	// Schema saplingSchema = forestSchema[0];
+	// after joins, 
+	RelationalOp* sapling = forest[0];
+	Schema saplingSchema = forestSchema[0];
 
 	// // create join operators based on the optimal order computed by the optimizer
 	// // need nTbl - 1 Join operators
@@ -398,12 +398,12 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// // cout << "+++++++++++++++++++++++++++++" << endl;
 	// // cout << *sapling << endl;
 
-	// // connect everything in the query execution tree and return
-	// // The root will be a WriteOut operator
-	// // _outfile is path to text file where query results are printed
-	// string outfile = "output.txt";
-	// sapling = new WriteOut(saplingSchema, outfile, sapling);
-	_queryTree.SetRoot(*forest[0]);
+	// connect everything in the query execution tree and return
+	// The root will be a WriteOut operator
+	// _outfile is path to text file where query results are printed
+	string outfile = "output.txt";
+	sapling = new WriteOut(saplingSchema, outfile, sapling);
+	_queryTree.SetRoot(*sapling);
 
 	// free the memory occupied by the parse tree since it is not necessary anymore
 	delete [] forest;

@@ -142,7 +142,7 @@ int File :: Open (int fileLen, char* fName) {
 	// read in the buffer if needed
 	if (fileLen != 0) {
 		// read in the first few bits, which is the number of pages
-		lseek (fileDescriptor, 0, SEEK_SET);
+		lseek (fileDescriptor, 0, SEEK_SET);	// jump to location in file
 		read (fileDescriptor, &curLength, sizeof (off_t));
 	}
 	else curLength = 0;
