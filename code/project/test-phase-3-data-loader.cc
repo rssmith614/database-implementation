@@ -6,6 +6,7 @@
 
 #include "Schema.h"
 #include "Catalog.h"
+#include "DBFile.h"
 
 using namespace std;
 
@@ -24,7 +25,15 @@ int main (int argc, char* argv[]) {
 	Catalog catalog(catalogFile);
 	cout << catalog << endl; cout.flush();
 
-	//write the code to load tuples from the text file to the heap file
+	Schema tblSchema; catalog.GetSchema(table.c_str(), tblSchema);
+	DBFile file;
+	file.Create((heapFile.c_str()), Heap);
+
+	file.Open(heapFile.c_str());
+
+	file.Load(tblSchema, textFile);
+
+	file.Close();
 
 	return 0;
 }

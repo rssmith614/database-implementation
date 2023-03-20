@@ -160,6 +160,8 @@ ostream& WriteOut::print(ostream& _os) {
 
 
 void QueryExecutionTree::ExecuteQuery() {
+	Record r;
+	root->GetNext(r);
 }
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {

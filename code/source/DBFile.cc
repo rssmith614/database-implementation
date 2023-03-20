@@ -67,6 +67,8 @@ void DBFile::Load (Schema& schema, char* textFile) {
 
 	FILE* f = fopen(textFile, "rt");
 	
+	//write the code to load tuples from the text file to the heap file
+
 	Record rec;
 	while (rec.ExtractNextRecord (schema, *f)) {
 		AppendRecord(rec);

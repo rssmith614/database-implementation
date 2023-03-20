@@ -12,15 +12,6 @@ GetNext(Record[]&) --> batch-at-a-time
 Pull-based pipeline iterator
 - start from the root of the tree and "pull" tuples from producer operators with GetNext() calls
 
-WriteOut::GetNext(Record&)
-  while (producer->GetNext(Record&))
-    print Record in output file
-
-RelAlg::GetNext(Record&)
-  producer->GetNext(Record&)
-  specific processing to this RelAlg operator
-  return a result tuple to the parent
-
 Push-based chunk execution
 - start from the leaves of the tree (Scan operators) and "push" chunks to the parent operators
 
@@ -29,16 +20,39 @@ tuples [10^20] --> can always process with tuple-at-a-time and paging
 
 Implement GetNext(Record&) for every RelAlg operator
 
+RelAlg::GetNext(Record&)
+  - producer->GetNext(Record&)
+  - specific processing to this RelAlg operator
+  - return a result tuple to the parent
+
+
 -- non-blocking operators
 ---------------
+WriteOut::GetNext(Record&)
+  while (producer->GetNext(Record& r))
+    print Record in output file: r.print(file, schema)
+
 Scan::GetNext(Record&)
   Read next record from DBFile(Heap) and return it to its parent
+  SETUP: Position to the beginning (first record) of the DBFile --> DBFile.MoveFirst()
+  Call DBFile.GetNext(Record& r)
+    - identify when to move to the next page
+  Return r to the parent operator --> return true;
+  STOP: Process the last page of the file
+    --> return false;
+
+IndexScan::GetNext(Record&)
+Scan + Select: push condition into the Scan operator
+B+-tree index
+
 
 Project::GetNext(Record&)
-  producer->GetNext(Record& rec)
-  rec.Project()
+  if (producer->GetNext(Record& rec))
+    rec.Project()
+    return true
+  return false
 
-Select::GetNext(Record&)
+Select::GetNext(Record& _record)
 	while (true) {
 		bool ret = producer->GetNext(_record);
 		if (false == ret) return false;
@@ -47,10 +61,6 @@ Select::GetNext(Record&)
 		if (true == predicate.Run(_record, constants)) return true;
 	}
   
-IndexScan::GetNext(Record&)
-Scan + Select: push condition into the Scan operator
-B+-tree index
-
 
 -- blocking operators
 ---------------
