@@ -38,9 +38,15 @@ int main (int argc, char* argv[]) {
 	}
 	// create DBFile object
 	DBFile dbFile;
-	dbFile.Create((char*) heapFile.c_str(), Heap);
+	if (1 == dbFile.Create((char*) heapFile.c_str(), Heap)) {
+		cerr << "Couldn't create dbFile" << endl;
+		abort();
+	}
 	dbFile.Load(schema, (char*) textFile.c_str());
 	dbFile.Close();
+
+	SString fPath(heapFile);
+	catalog.SetDataFile(tName, fPath);
 	
 	return 0;
 }

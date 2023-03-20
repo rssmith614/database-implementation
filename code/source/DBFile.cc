@@ -33,6 +33,7 @@ int DBFile::Create (char* f_path, FileType f_type) {
 	int ret = file.Open(0, (char*) fileName.c_str());
 	if (-1 == ret) {
 		cerr << "Error opening file " << fileName << endl;
+		return 1;
 	}
 	return 0;
 }
@@ -42,18 +43,20 @@ int DBFile::Open (char* f_path) {
 	int ret = file.Open(-1, (char*) fileName.c_str());
 	if (-1 == ret) {
 		cerr << "Error opening file " << fileName << endl;
+		return 1;
 	}
 	currentPagePos = 0;
 	ret = file.GetPage(currentPage, currentPagePos);
 	if (-1 == ret) {
 		cerr << "Error opening file " << fileName << endl;
+		return 1;
 	}
 	return 0;
 }
 
 int DBFile::Close () {
 	file.AddPage(currentPage, currentPagePos);
-	cout << file.GetLength() << endl;
+	cout << "Generated file with " << file.GetLength() << " pages" << endl;
 	file.Close();
 	return 0;
 }
@@ -88,13 +91,12 @@ int DBFile::GetNext (Record& rec) {
 }
 
 void DBFile::AppendRecord (Record& rec) {
-	if (0 == currentPage.Append(rec)) { 
+	// try to append the record to the current page
+	if (0 == currentPage.Append(rec)) { /* page is full */
 		// save the current page to File
-		file.AddPage(currentPage, currentPagePos);
 		// start a new page and add the record to this new page
+		file.AddPage(currentPage, currentPagePos);
 		currentPage.EmptyItOut();
-		// Page p;
-		// int ret = p.Append(rec);
 		currentPage.Append(rec);
 		// increment currentPagepos
 		currentPagePos++;
@@ -109,7 +111,6 @@ void DBFile::Load (Schema& schema, char* textFile) {
 	
 	Record rec;
 	while (rec.ExtractNextRecord (schema, *f)) {
-		// rec.print(cout, schema);
 		AppendRecord(rec);
 	}
 

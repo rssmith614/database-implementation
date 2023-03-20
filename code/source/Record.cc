@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 
 #include "Config.h"
 #include "Swap.h"
@@ -403,12 +404,13 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 	SInt n = mySchema.GetNumAtts();
 	AttributeVector& atts = mySchema.GetAtts();
 
-	_os << '{';
+	// _os << '{';
 
 	// loop through all of the attributes
 	for (int i = 0; i < n; i++) {
 		// print the attribute name
-		_os << atts[i].name << ": ";
+		// _os << atts[i].name << ": ";
+		_os << right << setw(20);
 
 		// use the i^th slot at the head of the record to get the
 		// offset to the correct attribute in the record
@@ -434,11 +436,11 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 
 		// print out a comma as needed to make things pretty
 		if (i != n - 1) {
-			_os << ", ";
+			_os << "\t|" << right << setw(20);
 		}
 	}
 
-	_os << '}';
+	// _os << '}';
 }
 
 

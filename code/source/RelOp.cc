@@ -27,6 +27,9 @@ bool Scan::GetNext(Record& _record) {
 		return true;
 	}
 	return false;
+
+	// we love one-liners
+	// return 0 == file.GetNext(_record) ? true : false;
 }
 
 ostream& Scan::print(ostream& _os, int depth) {
@@ -55,6 +58,7 @@ bool Select::GetNext(Record& _record) {
 		if (predicate.Run(_record, constants)) {
 			return true;
 		}
+		// if predicate is not satisfied, pull a new record
 	}
 	return false;	
 }
@@ -75,10 +79,15 @@ Project::Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
 }
 
 Project::~Project() {
+	delete [] keepMe;
 	delete producer;
 }
 
 bool Project::GetNext(Record& _record) {
+	if (producer->GetNext(_record)) {
+		_record.Project(keepMe, numAttsOutput, numAttsInput);
+		return true;
+	}
 	return false;
 }
 
@@ -209,6 +218,7 @@ bool WriteOut::GetNext(Record& _record) {
 	if (!f.is_open()) {
 		cerr << "Couldn't open output file " << outFile << endl;
 	}
+	f << schema << '\n';
 	while (producer->GetNext(_record)) {
 		// append record to file
 		_record.print(f, schema);
@@ -227,7 +237,7 @@ ostream& WriteOut::print(ostream& _os, int depth) {
 
 void QueryExecutionTree::ExecuteQuery() {
 	Record r;
-	while (root->GetNext(r));
+	root->GetNext(r);
 }
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {

@@ -343,14 +343,14 @@ ostream& operator<<(ostream& _os, OrderMaker& _o) {
 CNF::CNF() : numAnds(0) {}
 
 CNF::CNF(const CNF& _copy) : numAnds(_copy.numAnds) {
-	memcpy(andList, _copy.andList, _copy.numAnds*sizeof(Comparison));
+	memcpy((void*) andList, (void*) _copy.andList, _copy.numAnds*sizeof(Comparison));
 }
 
 CNF& CNF::operator=(const CNF& _o) {
 	// handle self-assignment first
 	if (this == &_o) return *this;
 
-	memcpy(andList, _o.andList, _o.numAnds*sizeof(Comparison));
+	memcpy((void*) andList, (void*) _o.andList, _o.numAnds*sizeof(Comparison));
 	numAnds = _o.numAnds;
 
 	return *this;

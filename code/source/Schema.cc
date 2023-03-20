@@ -233,13 +233,13 @@ ostream& operator<<(ostream& _os, Schema& _c) {
 				_os << "INTEGER";
 				break;
 			case Float:
-				cout << "FLOAT";
+				_os << "FLOAT";
 				break;
 			case String:
-				cout << "STRING";
+				_os << "STRING";
 				break;
 			default:
-				cout << "UNKNOWN";
+				_os << "UNKNOWN";
 				break;
 		}
 

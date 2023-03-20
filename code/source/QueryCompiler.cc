@@ -67,7 +67,7 @@ void QueryCompiler::GreedyJoin(Schema* forestSchema, int& nTbl, AndList* _predic
 		int ret = cnf.ExtractCNF(*_predicate, forestSchema[idx_R], forestSchema[idx_S]);
 		if (ret > 0){
 			Schema schemaOut;
-			schemaOut.Swap(forestSchema[idx_R]);
+			schemaOut.Append(forestSchema[idx_R]);
 			schemaOut.Append(forestSchema[idx_S]);
 			SInt noTuples = minJoinCost.second / schemaOut.GetNumAtts();
 			schemaOut.SetNoTuples(noTuples);
@@ -262,7 +262,7 @@ void QueryCompiler::CreateProject(Schema& saplingSchema, RelationalOp* &sapling,
 	RelationalOp* producer = sapling;
 	sapling = new Project(schemaIn, schemaOut, numAttsInput, numAttsOutput, keepMe_intv, producer);
 
-	delete [] keepMe_intv;
+	// delete [] keepMe_intv;
 
 	if (distinctAtts != 0) {
 		// schema = schema of the Project you just made
@@ -283,6 +283,20 @@ void QueryCompiler::CreateProject(Schema& saplingSchema, RelationalOp* &sapling,
 	saplingSchema.Swap(schemaOut);
 }
 
+// in-place linked list reversal
+void reverseList(NameList*& head) {
+    NameList* prev = NULL;
+    NameList* curr = head;
+	NameList* next = NULL;
+    while (curr != NULL) {
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+    head = prev;
+}
+
 void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	FuncOperator* _finalFunction, AndList* _predicate,
 	NameList* _groupingAtts, int& _distinctAtts,
@@ -290,6 +304,10 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// build the tree bottom-up
 
 	set<string> neededAtts;
+
+	// parser reads SELECT atts backwards
+	// reverse them so the output comes in the desired order
+	reverseList(_attsToSelect);
 
 	// create a SCAN operator for each table in the query
 	int nTbl = 0;
@@ -369,30 +387,30 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	// 	forestSchema[i].Swap(schemaOut);
 	// }
 
-	// // cout << endl << "PUSH DOWN PROJECTION" << endl;
-	// // cout << "+++++++++++++++++++++++" << endl;
-	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	// cout << endl << "PUSH DOWN PROJECTION" << endl;
+	// cout << "+++++++++++++++++++++++" << endl;
+	// for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+
+	// create join operators based on the optimal order computed by the optimizer
+	// need nTbl - 1 Join operators
+	GreedyJoin(forestSchema, nTbl, _predicate, forest);
+
+	// cout << endl << "JOINS" << endl;
+	// cout << "+++++++++++++++++++++++" << endl;
+	// for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 
 	// after joins, 
 	RelationalOp* sapling = forest[0];
 	Schema saplingSchema = forestSchema[0];
-
-	// // create join operators based on the optimal order computed by the optimizer
-	// // need nTbl - 1 Join operators
-	// GreedyJoin(forestSchema, nTbl, _predicate, forest);
-
-	// // cout << endl << "JOINS" << endl;
-	// // cout << "+++++++++++++++++++++++" << endl;
-	// // for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
 	
-	// // create the remaining operators based on the query
-	// if (_groupingAtts != NULL) {
-	// 	CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
-	// } else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
-	// 	CreateFunction(saplingSchema, sapling, _finalFunction);
-	// } else {
-	// 	CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
-	// }
+	// create the remaining operators based on the query
+	if (_groupingAtts != NULL) {
+		CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
+	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
+		CreateFunction(saplingSchema, sapling, _finalFunction);
+	} else {
+		CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
+	}
 
 	// // cout << "GROUP BY, FUNCTION, OR PROJECT" << endl;
 	// // cout << "+++++++++++++++++++++++++++++" << endl;
