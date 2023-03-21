@@ -17,7 +17,7 @@ int main (int argc, char* argv[]) {
 		return -1;
 	}
 
-	string table = argv[1];
+	SString table(argv[1]);
 	string heapFile = argv[2];
 	string textFile = argv[3];
 
@@ -25,13 +25,13 @@ int main (int argc, char* argv[]) {
 	Catalog catalog(catalogFile);
 	cout << catalog << endl; cout.flush();
 
-	Schema tblSchema; catalog.GetSchema(table.c_str(), tblSchema);
+	Schema tblSchema; catalog.GetSchema(table, tblSchema);
 	DBFile file;
-	file.Create((heapFile.c_str()), Heap);
+	file.Create(const_cast<char*>(heapFile.c_str()), Heap);
 
-	file.Open(heapFile.c_str());
+	file.Open(const_cast<char*>(heapFile.c_str()));
 
-	file.Load(tblSchema, textFile);
+	file.Load(tblSchema, const_cast<char*>(textFile.c_str()));
 
 	file.Close();
 

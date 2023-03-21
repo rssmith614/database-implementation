@@ -161,7 +161,9 @@ ostream& WriteOut::print(ostream& _os) {
 
 void QueryExecutionTree::ExecuteQuery() {
 	Record r;
-	root->GetNext(r);
+	while (root->GetNext(r)) {
+		// this loop ends when the query has processed all the records
+	}
 }
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
