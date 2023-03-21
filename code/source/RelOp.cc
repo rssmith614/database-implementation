@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include <unordered_set>
 #include "RelOp.h"
 
 using namespace std;
@@ -146,6 +147,14 @@ DuplicateRemoval::~DuplicateRemoval() {
 }
 
 bool DuplicateRemoval::GetNext(Record& _record) {
+	// while (0 == producer->GetNext(_record)) {
+	// 	if (s.find(_record) != s.end()) {
+	// 		continue;
+	// 	} else {
+	// 		s.insert(reinterpret_cast<unsigned char*>(_record));
+	// 		return true;
+	// 	}
+	// }
 	return false;
 }
 
@@ -169,7 +178,41 @@ Sum::~Sum() {
 }
 
 bool Sum::GetNext(Record& _record) {
-	return false;
+	if (done) return false;
+	int intRes = 0;
+	double doubleRes = 0.;
+	Type t;
+	while(producer->GetNext(_record)){
+		int nextInt = 0;
+		double nextDouble = 0;
+		t = compute.Apply(_record, nextInt, nextDouble);
+		intRes += nextInt;
+		doubleRes += nextDouble;
+	}
+
+	char* res;
+	int totSpace = sizeof (int) * 2;
+	if (t == Integer) {
+		totSpace += sizeof(int);
+	} else {
+		totSpace += sizeof(double);
+	}
+
+	char* space = new char[totSpace];
+	*((int*) &(space[0])) = totSpace;
+	*((int*) &(space[4])) = sizeof(int)*2;
+
+	if (t == Integer) {
+		*((int*) &(space[8])) = intRes;
+	}
+	else{
+		*((double*) &(space[8])) = doubleRes;
+	}
+
+	_record.CopyBits(space, totSpace);
+
+	done = true;
+	return true;
 }
 
 ostream& Sum::print(ostream& _os, int depth) {

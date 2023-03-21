@@ -2,6 +2,7 @@
 #define _REL_OP_H
 
 #include <iostream>
+#include <unordered_set>
 
 #include "Schema.h"
 #include "Record.h"
@@ -157,6 +158,8 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
+	unordered_set<string> s;
+
 public:
 	DuplicateRemoval(Schema& _schema, RelationalOp* _producer);
 	virtual ~DuplicateRemoval();
@@ -178,6 +181,8 @@ private:
 
 	// operator generating data
 	RelationalOp* producer;
+
+	bool done = false;
 
 public:
 	Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
