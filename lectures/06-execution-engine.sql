@@ -65,6 +65,8 @@ Select::GetNext(Record& _record)
 -- blocking operators
 ---------------
 
+SUM
++++
 Sum::GetNext(Record& outputRec)
   // make sure this is performed only once
   if flag is done return false
@@ -82,13 +84,44 @@ Sum::GetNext(Record& outputRec)
 
   return true
 
+outputRec
+[0] (int) --> size of record = 16
+[4] (int) --> offset of first (single) attribute = 8
+[8] (double) --> runningSum
+
 
 DISTINCT
 ++++++++
 - hash-based vs sort-based
 
+C++
+std::map --> red-black trees : find is O(log N)
+std::unordered_map --> hash table : find is O(1)
+
 S = {1, 2, 3, 1, 2, 3, 4, 5, 6}
 R = {1, 2, 3, 4, 5, 6}
+
+S(A, B)
+S = {(1, a), (2, a), (3, b), (1, b), (2, a), (3, c), (4, a), (5, c), (6, b)}
+R = {(1, a), (2, a), (3, b), (1, b), (3, c), (4, a), (5, c), (6, b)}
+
+SELECT DISTINCT A
+FROM S
+R = {1, 2, 3, 4, 5, 6}
+
+SELECT DISTINCT B
+FROM S
+R = {a, b, c}
+
+SELECT DISTINCT A, B
+FROM S
+R = {(1, a), (2, a), (3, b), (1, b), (3, c), (4, a), (5, c), (6, b)}
+
+SELECT B, SUM(A)
+FROM S
+GROUP BY B
+R = {(a, 9), (b, 10), (c, 8)}
+
 
 - hash-based --> hash table (map, dictionary)
 map :: key --> value (data, payload)
@@ -96,13 +129,26 @@ map :: key --> value (data, payload)
 map::insert(key, value)
 map::find(key) --> value
 
-map = {}
-for every tuple t in S do
-  if map.find(t) == true
+--> first call to GetNext()
+R = map = {}
+for every tuple t in S do  O(N)
+  if map.find(t) == true   O(1) for hash table; O(logN) for balanced trees
     continue
   else
-    map.insert(t)
+    map.insert(t)          O(1) for hash table; O(logN) for balanced trees
 end for
+
+--> overall complexity: O(N) for hash table; O(NlogN) for balanced trees
+
+1 -- insert --> R = {1}
+2 -- insert --> R = {1, 2}
+3 -- insert --> R = {1, 2, 3}
+1 -- find == true --> R = {1, 2, 3}
+2 -- find == true --> R = {1, 2, 3}
+3 -- find == true --> R = {1, 2, 3}
+4 -- insert --> R = {1, 2, 3, 4}
+5 -- insert --> R = {1, 2, 3, 4, 5}
+6 -- insert --> R = {1, 2, 3, 4, 5, 6}
 
 iterate over the map with a stateful iterator and return the keys
 map::MoveToStart
@@ -125,6 +171,8 @@ for every tuple t in S do
     return to calling (parent) operator
 end for
 
+map :: Record --> SInt/SDouble
+OrderMaker order(schema)
 Distinct::GetNext(Record& _record)
 	while (true) {
 		bool ret = producer->GetNext(_record);
@@ -138,11 +186,6 @@ Distinct::GetNext(Record& _record)
       return true
     end if
 	}
-
-
-C++
-std::map --> red-black trees : find is O(log N)
-std::unordered_map --> hash table : find is O(1)
 
 
 S = {1, 2, 3, 1, 2, 3, 4, 5, 6}
@@ -166,6 +209,7 @@ while not S'.AtEnd()
   end while
 end while
 R = {1, 2, 3, 4, 5, 6}
+
 
 Map :: Record --> KeyInt (KeyDouble)
 Distinct::GetNext(Record& outputRec)
@@ -213,11 +257,11 @@ map :: Record --> Aggregate (double)
 
 map = {}
 for every tuple t in S do
-  if map.find(t) == true
-    map[t] <-- map[t] + function.Apply(t)
+  if map.find(t.gAtts) == true
+    map[t.gAtts] <-- map[t.gAtts] + function.Apply(t)
     continue
   else
-    map.insert(t, function.Apply(t))
+    map.insert(t.gAtts, function.Apply(t))
 end for
 
 
@@ -246,7 +290,7 @@ GroupBy::GetNext(Record& outputRec)
       // first att in record is the aggregate
       Record aggRec
      	aggRec.bits = new char[2*sizeof(int) + sizeof(double)]
-      ((int*)aggRec.bits)[0] = 1
+      ((int*)aggRec.bits)[0] = 16
       ((int*)aggRec.bits)[1] = 2*sizeof(int)
       *((double*)(aggRec.bits+2*sizeof(int))) = map.CurrentData()
 
@@ -287,7 +331,7 @@ GroupBy::GetNext(Record& outputRec)
       // first att in record is the aggregate
       Record aggRec
      	aggRec.bits = new char[2*sizeof(int) + sizeof(double)]
-      ((int*)aggRec.bits)[0] = 1
+      ((int*)aggRec.bits)[0] = 16
       ((int*)aggRec.bits)[1] = 2*sizeof(int)
       *((double*)(aggRec.bits+2*sizeof(int))) = map.CurrentData()
 
@@ -304,5 +348,3 @@ GroupBy::GetNext(Record& outputRec)
     end if
 
   end if
-
-

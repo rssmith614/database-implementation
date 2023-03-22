@@ -85,7 +85,7 @@ public:
     void print(ostream& _os, Schema& mySchema);
 
 
-    	// comparison operator overloading
+   	// comparison operator overloading
 	bool operator< (const Record& _withMe) const;
 
 	bool IsEqual(Record& _withMe);
