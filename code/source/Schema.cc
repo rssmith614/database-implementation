@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include "Config.h"
 #include "Swap.h"
@@ -224,31 +225,33 @@ int Schema::Project(IntVector& _attsToKeep) {
 }
 
 ostream& operator<<(ostream& _os, Schema& _c) {
-	_os << "(";
+	// _os << "(";
 	for(int i=0; i<_c.atts.Length(); i++) {
-		_os << _c.atts[i].name << ':';
+		_os << left << setw(20) << _c.atts[i].name;
 
-		switch(_c.atts[i].type) {
-			case Integer:
-				_os << "INTEGER";
-				break;
-			case Float:
-				_os << "FLOAT";
-				break;
-			case String:
-				_os << "STRING";
-				break;
-			default:
-				_os << "UNKNOWN";
-				break;
+		// switch(_c.atts[i].type) {
+		// 	case Integer:
+		// 		_os << "INTEGER";
+		// 		break;
+		// 	case Float:
+		// 		_os << "FLOAT";
+		// 		break;
+		// 	case String:
+		// 		_os << "STRING";
+		// 		break;
+		// 	default:
+		// 		_os << "UNKNOWN";
+		// 		break;
+		// }
+
+		// _os << " [" << _c.atts[i].noDistinct << "]";
+		if (i != _c.atts.Length() - 1) {
+			_os << "|\t" << right << setw(20);
 		}
-
-		_os << " [" << _c.atts[i].noDistinct << "]";
-		if (i < _c.atts.Length()-1) _os << ", ";
 	}
-	_os << ")";
+	// _os << ")";
 
-	_os << "[" << _c.noTuples << "] [" << _c.fPath << "]";
+	// _os << "[" << _c.noTuples << "] [" << _c.fPath << "]";
 
 	return _os;
 }

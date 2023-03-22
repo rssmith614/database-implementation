@@ -9,6 +9,7 @@
 #include "DBFile.h"
 #include "Function.h"
 #include "Comparison.h"
+#include "Map.cc"
 
 using namespace std;
 
@@ -158,7 +159,9 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
-	unordered_set<string> s;
+	OrderMaker om;
+
+	Map<Record, SInt> m;
 
 public:
 	DuplicateRemoval(Schema& _schema, RelationalOp* _producer);

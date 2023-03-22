@@ -138,8 +138,7 @@ bool NestedLoopJoin::GetNext(Record& _record) {
 
 
 DuplicateRemoval::DuplicateRemoval(Schema& _schema, RelationalOp* _producer) : 
-	schema(_schema), producer(_producer) {
-
+	schema(_schema), producer(_producer), om(schema) {
 }
 
 DuplicateRemoval::~DuplicateRemoval() {
@@ -147,14 +146,18 @@ DuplicateRemoval::~DuplicateRemoval() {
 }
 
 bool DuplicateRemoval::GetNext(Record& _record) {
-	// while (0 == producer->GetNext(_record)) {
-	// 	if (s.find(_record) != s.end()) {
-	// 		continue;
-	// 	} else {
-	// 		s.insert(reinterpret_cast<unsigned char*>(_record));
-	// 		return true;
-	// 	}
-	// }
+	while (producer->GetNext(_record)) {
+		_record.SetOrderMaker(&om);
+		if (m.IsThere(_record)) {
+			continue;
+		} else {
+			SInt zero(0);
+			Record r_copy; 
+			r_copy = _record;
+			m.Insert(r_copy, zero);
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -235,6 +238,22 @@ GroupBy::~GroupBy() {
 }
 
 bool GroupBy::GetNext(Record& _record) {
+	// on first call
+	// fetch all records
+	// for each record
+		// set the ordermaker for the record
+		// if the record isn't in the map
+			// insert the record into the map, applying the function to the record and storing the result as the value
+		// if it is
+			// apply the function to the record and update the corresponding value in the map
+
+	// on subsequent calls
+	// pull current entry from map
+	// generate a record representing the sum result (like in Sum::GetNext)
+	// generate another record by projecting the original record to the grouping atts
+	// append the two records
+	// advance the map pointer
+	// return the frankenrecord
 	return false;
 }
 

@@ -273,7 +273,7 @@ void QueryCompiler::CreateProject(Schema& saplingSchema, RelationalOp* &sapling,
 			SString attName(schemaOut.GetAtts()[i].name);
 			ndv_prod *= schemaOut.GetDistincts(attName);
 		}
-		SInt cardinality(min(noTuples/2, ndv_prod));
+		SInt cardinality(min(ceil(noTuples/2.), (double) ndv_prod));
 		schemaOut.SetNoTuples(cardinality);
 		// producer = the new Project you just made
 		RelationalOp* producer = sapling;
