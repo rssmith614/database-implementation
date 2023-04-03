@@ -1,5 +1,5 @@
 CC = g++
-CCFLAGS = -g -O0 -Wno-deprecated -Wno-c++11-extensions -mmacosx-version-min=13.1
+CCFLAGS = -g -O0 -Wno-deprecated -Wno-c++11-extensions -mmacosx-version-min=13.3
 
 tag = -i
 

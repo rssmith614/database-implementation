@@ -410,7 +410,7 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 	for (int i = 0; i < n; i++) {
 		// print the attribute name
 		// _os << atts[i].name << ": ";
-		_os << left << setw(20);
+		// _os << left << setw(20);
 
 		// use the i^th slot at the head of the record to get the
 		// offset to the correct attribute in the record
@@ -426,7 +426,7 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 		// then is a double
 		else if (atts[i].type == Float) {
 			double myDouble; memcpy(&myDouble, bits+pointer, sizeof(double));
-			_os << setprecision(2) << fixed << myDouble;
+			_os << setprecision(numeric_limits<double>::digits10) << myDouble;
 		}
 		// then is a character string
 		else if (atts[i].type == String) {
@@ -436,7 +436,7 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 
 		// print out a comma as needed to make things pretty
 		if (i != n - 1) {
-			_os << "|\t" << right << setw(20);
+			_os << "|";
 		}
 	}
 

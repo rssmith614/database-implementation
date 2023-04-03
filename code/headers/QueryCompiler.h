@@ -26,6 +26,8 @@ private:
 	void CreateGroupBy(Schema& saplingSchema, RelationalOp* &sapling, NameList* groupingAtts, FuncOperator* finalFunction);
 	void CreateFunction(Schema& saplingSchema, RelationalOp* &sapling, FuncOperator* finalFunction);
 	void CreateProject(Schema& saplingSchema, RelationalOp* &sapling, NameList* attsToSelect, int& distinctAtts);
+	void PushProject(Schema* forestSchema, RelationalOp** forest, int nTbl, NameList* attsToSelect, 
+					AndList* predicate, NameList* groupingAtts, FuncOperator* finalFunction);
 
 public:
 	QueryCompiler(Catalog& _catalog);

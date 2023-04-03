@@ -212,6 +212,10 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
+	bool done;
+
+	Map<Record, SDouble> m;
+
 public:
 	GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtts,
 		Function& _compute,	RelationalOp* _producer);

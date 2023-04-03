@@ -239,22 +239,80 @@ GroupBy::~GroupBy() {
 
 bool GroupBy::GetNext(Record& _record) {
 	// on first call
-	// fetch all records
-	// for each record
-		// set the ordermaker for the record
-		// if the record isn't in the map
-			// insert the record into the map, applying the function to the record and storing the result as the value
-		// if it is
-			// apply the function to the record and update the corresponding value in the map
+	if (!done) {
+		Type t;
+		// fetch all records
+		while (producer->GetNext(_record)) {
+			Record copy;
+			copy = _record;
+			// we only care about unique instances of the grouping attributes,
+			// so project everything else out for map insertion
+			_record.Project(groupingAtts.whichAtts, groupingAtts.numAtts, schemaIn.GetNumAtts());
+			int* keepMe = new int[groupingAtts.numAtts];
+			for (int i=0; i<groupingAtts.numAtts; i++) {
+				keepMe[i] = i;
+			}
+			// new record format means new ordermaker
+			OrderMaker om(schemaOut, keepMe, groupingAtts.numAtts);
+			_record.SetOrderMaker(&om);
+			SDouble curSum = 0;
+			int ret = m.Find(_record, curSum);
+			int nextInt = 0;
+			double nextDouble = 0;
+			// function gets applied to the original record, since its
+			// function attributes haven't been projected away
+			t = compute.Apply(copy, nextInt, nextDouble);
+			if (t == Integer) {
+				curSum = curSum + nextInt;
+			} else {
+				curSum = curSum + nextDouble;
+			}
+			if (0 == ret) {
+				// save the grouping attributes with the result of the function on the one record
+				m.Insert(_record, curSum);
+			} else {
+				// update the map with the new sum
+				Record removedKey;
+				SDouble removedData;
+				m.Remove(_record, removedKey, removedData);
+				m.Insert(removedKey, curSum);
+			}
+			
+		}
+		done = true;
+		m.MoveToStart();
+		// then fall through
+	}
 
 	// on subsequent calls
+	if (m.AtEnd()) {
+		return false;
+	}
 	// pull current entry from map
+	Record groupRecord;
+	groupRecord = m.CurrentKey();
+	SDouble sum;
+	sum = m.CurrentData();
+
 	// generate a record representing the sum result (like in Sum::GetNext)
-	// generate another record by projecting the original record to the grouping atts
+	// 						metadata			payload
+	int totSpace = sizeof(int) + sizeof(int) + sizeof(double);
+	char* space = new char[totSpace];
+	// metadata
+	*((int*) &(space[0])) = totSpace;
+	*((int*) &(space[sizeof(int)])) = sizeof(int)*2;
+	// payload
+	*((double*) &(space[sizeof(int)*2])) = (double) sum;
+
+	Record sumRecord;
+	sumRecord.CopyBits(space, totSpace);
+
 	// append the two records
+	_record.AppendRecords(sumRecord, groupRecord, 1, groupingAtts.numAtts);
 	// advance the map pointer
+	m.Advance();
 	// return the frankenrecord
-	return false;
+	return true;
 }
 
 ostream& GroupBy::print(ostream& _os, int depth) {
@@ -280,7 +338,7 @@ bool WriteOut::GetNext(Record& _record) {
 	if (!f.is_open()) {
 		cerr << "Couldn't open output file " << outFile << endl;
 	}
-	f << schema << '\n';
+	// f << schema << '\n';
 	while (producer->GetNext(_record)) {
 		// append record to file
 		_record.print(f, schema);
