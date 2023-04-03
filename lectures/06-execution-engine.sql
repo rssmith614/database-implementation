@@ -259,7 +259,6 @@ map = {}
 for every tuple t in S do
   if map.find(t.gAtts) == true
     map[t.gAtts] <-- map[t.gAtts] + function.Apply(t)
-    continue
   else
     map.insert(t.gAtts, function.Apply(t))
 end for
@@ -290,7 +289,7 @@ GroupBy::GetNext(Record& outputRec)
       // first att in record is the aggregate
       Record aggRec
      	aggRec.bits = new char[2*sizeof(int) + sizeof(double)]
-      ((int*)aggRec.bits)[0] = 16
+      ((int*)aggRec.bits)[0] = 2*sizeof(int) + sizeof(double)
       ((int*)aggRec.bits)[1] = 2*sizeof(int)
       *((double*)(aggRec.bits+2*sizeof(int))) = map.CurrentData()
 
@@ -331,7 +330,7 @@ GroupBy::GetNext(Record& outputRec)
       // first att in record is the aggregate
       Record aggRec
      	aggRec.bits = new char[2*sizeof(int) + sizeof(double)]
-      ((int*)aggRec.bits)[0] = 16
+      ((int*)aggRec.bits)[0] = 2*sizeof(int) + sizeof(double)
       ((int*)aggRec.bits)[1] = 2*sizeof(int)
       *((double*)(aggRec.bits+2*sizeof(int))) = map.CurrentData()
 
