@@ -61,7 +61,7 @@ Two-Phase Multiway Merge Sort (TPMMS)
   P_1: 4
   P_2: 5
   P_3: 3 *
-  R = {1, 1, 2, 2, 3}
+  R = {1, 1, 2, 2, 3, 3}
 
   P_1: 4 *
   P_2: 5
