@@ -111,17 +111,19 @@ for (int i = 0; i < 2000000000; i++) {
 
 
 orders
-insert into attributes values('orders', 0, 'o_orderkey', 'INTEGER', 15000);
-insert into attributes values('orders', 1, 'o_custkey', 'INTEGER', 1000);
-insert into attributes values('orders', 2, 'o_orderstatus', 'STRING', 3);
-insert into attributes values('orders', 3, 'o_totalprice', 'FLOAT', 14996);
-insert into attributes values('orders', 4, 'o_orderdate', 'STRING', 2401);
-insert into attributes values('orders', 5, 'o_orderpriority', 'STRING', 5);
-insert into attributes values('orders', 6, 'o_clerk', 'STRING', 1000);
-insert into attributes values('orders', 7, 'o_shippriority', 'STRING', 1);
-insert into attributes values('orders', 8, 'o_comment', 'STRING', 15000);
+insert into attributes values('orders', 0, 'o_orderkey', 'INTEGER', 15000);  4
+insert into attributes values('orders', 1, 'o_custkey', 'INTEGER', 1000);    4
+insert into attributes values('orders', 2, 'o_orderstatus', 'STRING', 3);    2
+insert into attributes values('orders', 3, 'o_totalprice', 'FLOAT', 14996);  8
+insert into attributes values('orders', 4, 'o_orderdate', 'STRING', 2401);  12
+insert into attributes values('orders', 5, 'o_orderpriority', 'STRING', 5); 20
+insert into attributes values('orders', 6, 'o_clerk', 'STRING', 1000);      40
+insert into attributes values('orders', 7, 'o_shippriority', 'STRING', 1);  20
+insert into attributes values('orders', 8, 'o_comment', 'STRING', 15000);   100
 
 39|818|O|326565.37|1996-09-20|3-MEDIUM|Clerk#000000659|0|ole express, ironic requests: ir|
+
+- variable-size attributes (support strings with variable size)
   - [0]  int (4 bytes) : length of record 1 [rl_2] --> [129]
   - [4]  int (4 bytes) : starting position (address, byte) of attribute 1 (o_orderkey) --> [40]
   - [8]  int (4 bytes) : starting position (address, byte) of attribute 2 (o_custkey) --> [44]
@@ -133,13 +135,59 @@ insert into attributes values('orders', 8, 'o_comment', 'STRING', 15000);
   - [32] int (4 bytes) : starting position (address, byte) of attribute 4 (o_shippriority) --> [94]
   - [36] int (4 bytes) : starting position (address, byte) of attribute 4 (o_comment) --> [96]
   - [40] int (4 bytes) : value of o_orderkey --> 39
-  - [44] string (10 bytes) : value of o_custkey --> 818
-  - [48] int (4 bytes) : value of o_orderstatus --> 'O\0'
-  - [50] string (77 bytes) : value of o_totalprice --> 326565.37
-  - [58] string (77 bytes) : value of o_orderdate --> '1996-09-20\0'
-  - [69] string (77 bytes) : value of o_orderpriority --> '3-MEDIUM\0'
-  - [78] string (77 bytes) : value of o_clerk --> 'Clerk#000000659\0'
-  - [94] string (77 bytes) : value of o_shippriority --> '0\0'
-  - [96] string (77 bytes) : value of o_comment --> 'ole express, ironic requests: ir\0'
+  - [44] int (4 bytes) : value of o_custkey --> 818
+  - [48] string (2 bytes) : value of o_orderstatus --> 'O\0'
+  - [50] float (8 bytes) : value of o_totalprice --> 326565.37
+  - [58] string (11 bytes) : value of o_orderdate --> '1996-09-20\0'
+  - [69] string (9 bytes) : value of o_orderpriority --> '3-MEDIUM\0'
+  - [78] string (16 bytes) : value of o_clerk --> 'Clerk#000000659\0'
+  - [94] string (2 bytes) : value of o_shippriority --> '0\0'
+  - [96] string (33 bytes) : value of o_comment --> 'ole express, ironic requests: ir\0'
+
+- fixed-size attributes (all strings have a fixed size)
+  - [0] int (4 bytes) : value of o_orderkey --> 39
+  - [4] int (4 bytes) : value of o_custkey --> 818
+  - [8] string (2 bytes) : value of o_orderstatus --> 'O\0'
+  - [10] float (8 bytes) : value of o_totalprice --> 326565.37
+  - [18] string (12 bytes) : value of o_orderdate --> '1996-09-20\0'
+  - [30] string (20 bytes) : value of o_orderpriority --> '3-MEDIUM\0'
+  - [50] string (40 bytes) : value of o_clerk --> 'Clerk#000000659\0'
+  - [90] string (20 bytes) : value of o_shippriority --> '0\0'
+  - [110] string (100 bytes) : value of o_comment --> 'ole express, ironic requests: ir\0'
+- next record starts at position (address) [210]
 
 - column-store databases
+
+- file consists of a list of records sequenced one after another
+- in order to access a record, jump to the starting address (byte address) of the record in the file
+  - identify the page on which the record resides
+  - read the entire page in memory
+  - jump to the byte address of the record in the page
+
+- files are organized (split) into pages of fixed size
+- a page contains a sublist (subset) of the records in the file
+
+file [(n+1) * 128KB]
+  - page[0] // 0 --> number of pages in file is stored on page[0]; this is a single integer
+  - page[1] // 128KB
+  - page[2] // 256KB
+  ...
+  - page[n] // n * 128KB
+
+
+- bulk loading is implemented in DBFile.Load(Schema& _schema, char* textFile)
+  - open text file: FILE *f = fopen(textFile, "rt")
+  
+  - while (Record r.ExtractNextRecord (_schema, f)) {
+    - if (0 == currentPage.Append(r)) {
+      file.AddPage(currentPage, currentPagePos)
+      currentPage.EmptyItOut()
+      currentPagePos += 1
+
+      currentPage.Append(r)
+    }
+  }
+
+  - save the content of the last page to the heap file
+  
+  - fclose(f)

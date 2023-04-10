@@ -17,10 +17,7 @@ int main (int argc, char* argv[]) {
 		return -1;
 	}
 
-	// record name
-	string table = argv[1];
-	SString tName(table);
-	// destination
+	SString table(argv[1]);
 	string heapFile = argv[2];
 	// source
 	string textFile = argv[3];
