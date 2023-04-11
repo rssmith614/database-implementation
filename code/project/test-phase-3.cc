@@ -62,7 +62,7 @@ int main () {
 	compiler.Compile(tables, attsToSelect, finalFunction, predicate,
 		groupingAtts, distinctAtts, queryTree);
 
-	// cout << queryTree << endl;
+	cout << queryTree << endl;
 
 	// execute the query
 	queryTree.ExecuteQuery();

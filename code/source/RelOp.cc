@@ -108,7 +108,17 @@ Join::Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 }
 
 Join::~Join() {
+	delete left;
+	delete right;
+}
 
+bool Join::GetNext(Record& _record) {
+	// if not equijoin
+		// nested loop join
+	// else if more than 1000 tuples in both children
+		// symmetric hash join
+	// else
+		// hash join
 }
 
 ostream& Join::print(ostream& _os, int depth) {
@@ -123,17 +133,174 @@ ostream& Join::print(ostream& _os, int depth) {
 
 NestedLoopJoin::NestedLoopJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 	CNF& _predicate, RelationalOp* _left, RelationalOp* _right)
-	: Join(_schemaLeft, _schemaRight, _schemaOut, _predicate, _left, _right) {
+	: Join(_schemaLeft, _schemaRight, _schemaOut, _predicate, _left, _right),
+	left_om(schemaLeft), right_om(schemaRight) {
+
+	predicate.GetSortOrders(left_om, right_om);
 
 }
 
 NestedLoopJoin::~NestedLoopJoin() {
-	delete left;
-	delete right;
+	
 }
 
 bool NestedLoopJoin::GetNext(Record& _record) {
+	// on first call
+	if (!done) {
+		// get all tuples from S (right)
+		while (right->GetNext(_record)) {
+			_record.SetOrderMaker(&right_om);
+			list.Append(_record);
+		}
+
+		list.MoveToStart();
+		done = true;
+
+		// get a tuple from R
+		while (left->GetNext(_record)) {
+			hasLRec = true;
+			lRec.Swap(_record);
+			lRec.SetOrderMaker(&left_om);
+			break;
+		}
+		
+		// stop if no tuples in R
+		if (!hasLRec)
+			return false;
+	}
+
+	// loop on R
+	while (true) {
+		while (!list.AtEnd()) {
+			// check if current tuples from R and S join
+			if (predicate.Run(lRec, list.Current())) {
+				// return joined records
+				_record.AppendRecords(lRec, list.Current(), schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				list.Advance();
+				return true;
+			}
+			list.Advance();
+		}
+			
+		// reset S list
+		list.MoveToStart();
+		// get a tuple from R
+		hasLRec = false;
+		while (left->GetNext(_record)) {
+			hasLRec = true;
+			lRec.Swap(_record);
+			lRec.SetOrderMaker(&left_om);
+			break;
+		}
+		
+		// stop if R is out of tuples
+		if (!hasLRec)
+			return false;
+	}
+
 	return false;
+}
+
+HashJoin::HashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
+	CNF& _predicate, RelationalOp* _left, RelationalOp* _right)
+	: Join(_schemaLeft, _schemaRight, _schemaOut, _predicate, _left, _right),
+	left_om(schemaLeft), right_om(schemaRight) {
+
+	predicate.GetSortOrders(left_om, right_om);
+
+}
+
+HashJoin::~HashJoin() {
+
+}
+
+bool HashJoin::GetNext(Record& _record) {
+	// on first call
+	if (!done) {
+		// get all records from S
+		while (right->GetNext(_record)) {
+			_record.SetOrderMaker(&right_om);
+			SInt zero(0);
+			map.Insert(_record, zero);
+		}
+
+		done = true;
+
+		// get a record from R
+		while (left->GetNext(_record)) {
+			// search for corresponding tuple in S
+			_record.SetOrderMaker(&left_om);
+			if (map.IsThere(_record)) {
+				hasLRec = true;
+				lRec.Swap(_record);
+				// append the records from R and S and return
+				_record.AppendRecords(lRec, map.CurrentKey(), schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				map.Advance();
+				return true;
+			}
+		}
+
+		if (!hasLRec)
+			return false;
+	}
+
+	// loop on R
+	while (true) {
+		// I don't understand why this is here
+		if (!map.AtEnd()) {
+			if (predicate.Run(lRec, map.CurrentKey())) {
+				// append the records from R and S and return
+				_record.AppendRecords(lRec, map.CurrentKey(), schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				map.Advance();
+				return true;
+			}
+		}
+
+		// find the next record from R
+		hasLRec = false;
+		while (left->GetNext(_record)) {
+			_record.SetOrderMaker(&left_om);
+			// look for its joining tuple in S
+			if (map.IsThere(_record)) {
+				hasLRec = true;
+				lRec.Swap(_record);
+				_record.AppendRecords(lRec, map.CurrentKey(), schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				map.Advance();
+				return true;
+			}
+		}
+
+		if (!hasLRec)
+			return false;
+	}
+}
+
+SymmetricHashJoin::SymmetricHashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
+	CNF& _predicate, RelationalOp* _left, RelationalOp* _right)
+	: Join(_schemaLeft, _schemaRight, _schemaOut, _predicate, _left, _right),
+	left_om(schemaLeft), right_om(schemaRight) {
+
+	predicate.GetSortOrders(left_om, right_om);
+
+}
+
+SymmetricHashJoin::~SymmetricHashJoin() {
+	
+}
+
+bool SymmetricHashJoin::GetNext(Record& _record) {
+	// if R and S are empty and the buffer is empty
+		// return false
+	// if records in buffer
+		// return the next record
+
+	// if working on right (S)
+		// switch to left (R)
+		// if R has records
+			// put record in R_map
+			// look for record in S_map
+				// put joined record in buffer
+			
 }
 
 

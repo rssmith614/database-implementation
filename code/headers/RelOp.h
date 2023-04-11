@@ -138,14 +138,67 @@ public:
 
 class NestedLoopJoin : public Join {
 protected:
+	// all records of inner loop
 	RecordList list;
+	// current record of outer loop
 	Record lRec;
+
+	OrderMaker left_om, right_om;
+
+	bool done = false;
+	bool hasLRec = false;
 
 public:
 	NestedLoopJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 		CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
 
 	virtual ~NestedLoopJoin();
+
+	virtual bool GetNext(Record& _record);
+};
+
+class HashJoin : public Join {
+protected:
+	// all records of inner loop
+	Map<Record, SInt> map;
+	// current record of outer loop
+	Record lRec;
+
+	OrderMaker left_om, right_om;
+
+	bool done = false;
+	bool hasLRec = false;
+
+public:
+	HashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
+		CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
+
+	virtual ~HashJoin();
+
+	virtual bool GetNext(Record& _record);
+};
+
+class SymmetricHashJoin : public Join {
+protected:
+	// all records of inner loop
+	Map<Record, SInt> S_map;
+	// all records of outer loop
+	Map<Record, SInt> R_map;
+
+	OrderMaker left_om, right_om;
+
+	bool S_done = false;
+	bool R_done = false;
+
+	enum whichSide {R, S};
+
+	RecordList buffer;
+
+public:
+	SymmetricHashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
+		CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
+
+	virtual ~SymmetricHashJoin();
 
 	virtual bool GetNext(Record& _record);
 };

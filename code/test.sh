@@ -10,12 +10,12 @@ if [ $1 = "all" ]; then
     RES=0
     for I in {1..20}
     do
-        sql="../queries/phase-3/$I.sql"
+        sql="../queries/phase-4/$I.sql"
 
-        execs/test-phase-3.out < $sql > /dev/null
-        sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
+        execs/test-query.out < $sql > /dev/null
+        sqlite3 ../data/tpch.sqlite | sort < $sql > sqlite_output.txt
 
-        if numdiff output.txt sqlite_output.txt > /dev/null; then
+        if numdiff <(sort output.txt) sqlite_output.txt > /dev/null; then
             echo passed $I.sql
             ((RES=RES+1))
         else
@@ -25,10 +25,10 @@ if [ $1 = "all" ]; then
     
     echo passed $RES / $N queries
 else
-    sql="../queries/phase-3/$1.sql"
+    sql="../queries/phase-4/$1.sql"
 
-    execs/test-phase-3.out < $sql > /dev/null
-    sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
+    execs/test-query.out < $sql > /dev/null
+    sqlite3 ../data/tpch.sqlite | sort < $sql > sqlite_output.txt
 
     if ! numdiff output.txt sqlite_output.txt > output_diff.txt; then
         echo sqlite output was different

@@ -72,7 +72,29 @@ void QueryCompiler::GreedyJoin(Schema* forestSchema, int& nTbl, AndList* _predic
 			SInt noTuples = minJoinCost.second / schemaOut.GetNumAtts();
 			schemaOut.SetNoTuples(noTuples);
 			// new join op replaces lower idx
-			forest[idx_R] = new NestedLoopJoin(forestSchema[idx_R], forestSchema[idx_S], schemaOut, cnf, forest[idx_R], forest[idx_S]);
+			// iterate through cnf.andlist
+			bool hasJoined = false;
+			for (int and_idx=0; and_idx < cnf.numAnds; and_idx++) {
+				// if we see anything other than EQUALS, use NLJ
+				if (cnf.andList[and_idx].op != Equals) {
+					forest[idx_R] = new NestedLoopJoin(forestSchema[idx_R], forestSchema[idx_S], schemaOut, cnf, forest[idx_R], forest[idx_S]);
+					hasJoined = true;
+					cout << "NLJ" << endl;
+				}
+			}
+			// check forestSchema[idx_R and S].GetNoTuples to see if >1000
+			if(!hasJoined){
+				if ((forestSchema[idx_R].GetNoTuples() + forestSchema[idx_S].GetNoTuples()) > 1000) {
+					// use SHJ
+					forest[idx_R] = new SymmetricHashJoin(forestSchema[idx_R], forestSchema[idx_S], schemaOut, cnf, forest[idx_R], forest[idx_S]);
+					cout << "SHJ" << endl;
+				}
+				else {
+					// use HJ
+					forest[idx_R] = new HashJoin(forestSchema[idx_R], forestSchema[idx_S], schemaOut, cnf, forest[idx_R], forest[idx_S]);
+					cout << "HJ" << endl;
+				}
+			}
 			forestSchema[idx_R].Swap(schemaOut);
 			// ops above higher idx are shifted down
 			for (int j=idx_S; j < nTbl-1; j++) {
@@ -414,8 +436,8 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 
 	// push down projection: create PROJECT operators to help reduce
 	// intermediate table sizes for large queries
-	if (nTbl > 1)
-		PushProject(forestSchema, forest, nTbl, _attsToSelect, _predicate, _groupingAtts, _finalFunction);
+	// if (nTbl > 1)
+	// 	PushProject(forestSchema, forest, nTbl, _attsToSelect, _predicate, _groupingAtts, _finalFunction);
 
 	// create join operators based on the optimal order computed by the optimizer
 	// need nTbl - 1 Join operators
@@ -430,7 +452,7 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 		CreateGroupBy(saplingSchema, sapling, _groupingAtts, _finalFunction);
 	} else if (_finalFunction != NULL /* but _groupingAtts IS null */) {
 		CreateFunction(saplingSchema, sapling, _finalFunction);
-	} else {
+	} else if (_attsToSelect != NULL) {
 		CreateProject(saplingSchema, sapling, _attsToSelect, _distinctAtts);
 	}
 
