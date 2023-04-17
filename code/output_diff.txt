@@ -1,6 +1,0 @@
-----------------
-          <==
-##1       ==> 
-
-
-+++  File "output.txt" differs from file "sqlite_output.txt"

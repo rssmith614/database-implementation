@@ -113,12 +113,7 @@ Join::~Join() {
 }
 
 bool Join::GetNext(Record& _record) {
-	// if not equijoin
-		// nested loop join
-	// else if more than 1000 tuples in both children
-		// symmetric hash join
-	// else
-		// hash join
+	return false;
 }
 
 ostream& Join::print(ostream& _os, int depth) {
@@ -246,7 +241,7 @@ bool HashJoin::GetNext(Record& _record) {
 
 	// loop on R
 	while (true) {
-		// I don't understand why this is here
+		// check if we advanced the map to another matching record
 		if (!map.AtEnd()) {
 			if (predicate.Run(lRec, map.CurrentKey())) {
 				// append the records from R and S and return
@@ -278,7 +273,7 @@ bool HashJoin::GetNext(Record& _record) {
 SymmetricHashJoin::SymmetricHashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 	CNF& _predicate, RelationalOp* _left, RelationalOp* _right)
 	: Join(_schemaLeft, _schemaRight, _schemaOut, _predicate, _left, _right),
-	left_om(schemaLeft), right_om(schemaRight) {
+	left_om(schemaLeft), right_om(schemaRight), zero(0) {
 
 	predicate.GetSortOrders(left_om, right_om);
 
@@ -289,18 +284,97 @@ SymmetricHashJoin::~SymmetricHashJoin() {
 }
 
 bool SymmetricHashJoin::GetNext(Record& _record) {
-	// if R and S are empty and the buffer is empty
-		// return false
-	// if records in buffer
-		// return the next record
+	// if there are no records left
+	if (R_done && S_done && buffer.Length() == 0)
+		return false;
 
-	// if working on right (S)
-		// switch to left (R)
-		// if R has records
-			// put record in R_map
-			// look for record in S_map
-				// put joined record in buffer
-			
+	// if there are records to return
+	if (buffer.Length() > 0) {
+		buffer.Remove(_record);
+		return true;
+	}
+
+	// find some records to join
+	while (true) {
+		// currently working on right (S)
+		if (whichSide == S) {
+			// if S has records
+			if (!S_done && right->GetNext(_record)) {
+				// prepare for comparisons
+				S_rec.Swap(_record);
+				S_rec.SetOrderMaker(&right_om);
+				
+				// look for record in R_map
+				if (R_map.IsThere(S_rec)) {
+					// prepare for comparisons
+					R_rec.CopyBits(R_map.CurrentKey().GetBits(), R_map.CurrentKey().GetSize());
+					R_rec.SetOrderMaker(&left_om);
+					// find all hits
+					while (!R_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
+						// put joined record in buffer
+						_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+						buffer.Append(_record);
+						// we need to check hash collisions
+						R_map.Advance();
+						R_rec.CopyBits(R_map.CurrentKey().GetBits(), R_map.CurrentKey().GetSize());
+						R_rec.SetOrderMaker(&left_om);
+					}
+					buffer.MoveToStart();
+				}
+
+				// insert current record from S into map
+				S_map.Insert(S_rec, zero);
+			} else {
+				S_done = true;
+			}
+			// switch to left for next loop (R)
+			whichSide = R;
+		} 
+		// currently working on left (R)
+		else if (whichSide == R) {
+			// if R has records
+			if (!R_done && left->GetNext(_record)) {
+				// prepare for comparisons
+				R_rec.Swap(_record);
+				R_rec.SetOrderMaker(&left_om);
+				
+				// look for record in S_map
+				if (S_map.IsThere(R_rec)) {
+					// prepare for comparisons
+					S_rec.CopyBits(S_map.CurrentKey().GetBits(), S_map.CurrentKey().GetSize());
+					S_rec.SetOrderMaker(&right_om);
+					// find all hits
+					while (!S_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
+						// put joined record in buffer
+						_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+						buffer.Append(_record);
+						// check hash collisions
+						S_map.Advance();
+						S_rec.CopyBits(S_map.CurrentKey().GetBits(), S_map.CurrentKey().GetSize());
+						S_rec.SetOrderMaker(&right_om);
+					}
+					buffer.MoveToStart();
+				}
+
+				// put record from R into map
+				R_map.Insert(R_rec, zero);
+			} else {
+				R_done = true;
+			}
+			// switch to right for next loop (S)
+			whichSide = S;
+		}
+
+		// if no records left to return
+		if (R_done && S_done && buffer.Length() == 0)
+			return false;
+		
+		// if there are records to return
+		if (buffer.Length() > 0) {
+			buffer.Remove(_record);
+			return true;
+		}
+	}	
 }
 
 

@@ -185,14 +185,19 @@ protected:
 	// all records of outer loop
 	Map<Record, SInt> R_map;
 
+	Record R_rec, S_rec;
+
 	OrderMaker left_om, right_om;
 
 	bool S_done = false;
 	bool R_done = false;
 
-	enum whichSide {R, S};
+	enum Side {R, S};
+	Side whichSide = R;
 
 	RecordList buffer;
+
+	SInt zero;
 
 public:
 	SymmetricHashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,

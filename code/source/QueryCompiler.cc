@@ -436,8 +436,8 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 
 	// push down projection: create PROJECT operators to help reduce
 	// intermediate table sizes for large queries
-	// if (nTbl > 1)
-	// 	PushProject(forestSchema, forest, nTbl, _attsToSelect, _predicate, _groupingAtts, _finalFunction);
+	if (nTbl > 1)
+		PushProject(forestSchema, forest, nTbl, _attsToSelect, _predicate, _groupingAtts, _finalFunction);
 
 	// create join operators based on the optimal order computed by the optimizer
 	// need nTbl - 1 Join operators

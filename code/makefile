@@ -74,4 +74,4 @@ clean:
 	rm -f source/QueryLexer.c
 	rm -f source/QueryParser.c
 	rm -f headers/QueryParser.h
-	rm -f output.txt
+	rm -f output.txt sqlite_output.txt output_diff.txt

@@ -106,6 +106,12 @@ SelectAtts: Function ',' Atts
 	finalFunction = NULL;
 	attsToSelect = $2;
 	finalFunction = NULL;
+}
+
+|'*'
+{
+	finalFunction = NULL;
+	attsToSelect = NULL;
 };
 
 
