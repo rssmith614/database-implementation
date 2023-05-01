@@ -12,7 +12,7 @@ if [ $1 = "all" ]; then
     for I in {1..20}
     do
         sql="../queries/phase-4/$I.sql" 
-        echo $sql >> output_diff.txt $'\n'
+        echo $sql >> output_diff.txt
 
         sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
         execs/test-query.out < $sql > /dev/null
@@ -26,6 +26,8 @@ if [ $1 = "all" ]; then
         else
             echo failed $I.sql
         fi
+
+        echo "==========================================================" >> output_diff.txt
     done
     
     echo passed $RES / $N queries

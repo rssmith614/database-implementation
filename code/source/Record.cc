@@ -426,7 +426,14 @@ void Record :: print(ostream& _os, Schema& mySchema) {
 		// then is a double
 		else if (atts[i].type == Float) {
 			double myDouble; memcpy(&myDouble, bits+pointer, sizeof(double));
-			_os << setprecision(numeric_limits<double>::digits10) << myDouble;
+			double intpart;
+			// cerr << "bruh " << myDouble << " | " << modf(myDouble, &intpart) << endl;
+			if (abs(modf(myDouble, &intpart)) < 1e-10) {
+				// cerr << setprecision(numeric_limits<double>::digits10) << "double " << myDouble << " was whole number" << endl;
+				_os << myDouble << ".0";
+			} else {
+				_os << setprecision(numeric_limits<double>::digits10) << myDouble;
+			}
 		}
 		// then is a character string
 		else if (atts[i].type == String) {

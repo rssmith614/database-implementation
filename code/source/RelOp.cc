@@ -298,68 +298,74 @@ bool SymmetricHashJoin::GetNext(Record& _record) {
 	while (true) {
 		// currently working on right (S)
 		if (whichSide == S) {
-			// if S has records
-			if (!S_done && right->GetNext(_record)) {
-				// prepare for comparisons
-				S_rec.Swap(_record);
-				S_rec.SetOrderMaker(&right_om);
-				
-				// look for record in R_map
-				if (R_map.IsThere(S_rec)) {
+			for (int i=0; i < recsPerCall; i++) {
+				// if S has records
+				if (!S_done && right->GetNext(_record)) {
 					// prepare for comparisons
-					R_rec.CopyBits(R_map.CurrentKey().GetBits(), R_map.CurrentKey().GetSize());
-					R_rec.SetOrderMaker(&left_om);
-					// find all hits
-					while (!R_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
-						// put joined record in buffer
-						_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-						buffer.Append(_record);
-						// we need to check hash collisions
-						R_map.Advance();
+					S_rec.Swap(_record);
+					S_rec.SetOrderMaker(&right_om);
+					
+					// look for record in R_map
+					if (R_map.IsThere(S_rec)) {
+						// prepare for comparisons
 						R_rec.CopyBits(R_map.CurrentKey().GetBits(), R_map.CurrentKey().GetSize());
 						R_rec.SetOrderMaker(&left_om);
+						// find all hits
+						while (!R_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
+							// put joined record in buffer
+							_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+							buffer.Append(_record);
+							// we need to check hash collisions
+							R_map.Advance();
+							R_rec.CopyBits(R_map.CurrentKey().GetBits(), R_map.CurrentKey().GetSize());
+							R_rec.SetOrderMaker(&left_om);
+						}
+						buffer.MoveToStart();
 					}
-					buffer.MoveToStart();
-				}
 
-				// insert current record from S into map
-				S_map.Insert(S_rec, zero);
-			} else {
-				S_done = true;
+					// insert current record from S into map
+					S_map.Insert(S_rec, zero);
+				} else {
+					S_done = true;
+					break;
+				}
 			}
 			// switch to left for next loop (R)
 			whichSide = R;
 		} 
 		// currently working on left (R)
 		else if (whichSide == R) {
-			// if R has records
-			if (!R_done && left->GetNext(_record)) {
-				// prepare for comparisons
-				R_rec.Swap(_record);
-				R_rec.SetOrderMaker(&left_om);
-				
-				// look for record in S_map
-				if (S_map.IsThere(R_rec)) {
+			for (int i=0; i < recsPerCall; i++) {
+				// if R has records
+				if (!R_done && left->GetNext(_record)) {
 					// prepare for comparisons
-					S_rec.CopyBits(S_map.CurrentKey().GetBits(), S_map.CurrentKey().GetSize());
-					S_rec.SetOrderMaker(&right_om);
-					// find all hits
-					while (!S_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
-						// put joined record in buffer
-						_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-						buffer.Append(_record);
-						// check hash collisions
-						S_map.Advance();
+					R_rec.Swap(_record);
+					R_rec.SetOrderMaker(&left_om);
+					
+					// look for record in S_map
+					if (S_map.IsThere(R_rec)) {
+						// prepare for comparisons
 						S_rec.CopyBits(S_map.CurrentKey().GetBits(), S_map.CurrentKey().GetSize());
 						S_rec.SetOrderMaker(&right_om);
+						// find all hits
+						while (!S_map.AtEnd() && predicate.Run(R_rec, S_rec)) {
+							// put joined record in buffer
+							_record.AppendRecords(R_rec, S_rec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+							buffer.Append(_record);
+							// check hash collisions
+							S_map.Advance();
+							S_rec.CopyBits(S_map.CurrentKey().GetBits(), S_map.CurrentKey().GetSize());
+							S_rec.SetOrderMaker(&right_om);
+						}
+						buffer.MoveToStart();
 					}
-					buffer.MoveToStart();
-				}
 
-				// put record from R into map
-				R_map.Insert(R_rec, zero);
-			} else {
-				R_done = true;
+					// put record from R into map
+					R_map.Insert(R_rec, zero);
+				} else {
+					R_done = true;
+					break;
+				}
 			}
 			// switch to right for next loop (S)
 			whichSide = S;
