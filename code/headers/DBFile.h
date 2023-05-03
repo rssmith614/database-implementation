@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "Record.h"
 #include "Schema.h"
+#include "Map.h"
 #include "File.h"
 
 using namespace std;
@@ -34,6 +35,10 @@ public:
 
 	void AppendRecord (Record& _addMe);
 	void Load (Schema& _schema, char* textFile);
+
+	off_t GetCurrentPage();
 };
+
+
 
 #endif //DBFILE_H

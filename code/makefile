@@ -16,7 +16,8 @@ PHASE_ONE = $(addprefix $(OBJDIR)/,Schema.o Catalog.o test-phase-1.o)
 PHASE_TWO = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-2.o)
 PHASE_THREE_DATA_LOADER = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-3-data-loader.o)
 PHASE_THREE = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-3.o)
-QUERY = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-query.o)
+QUERY = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o BTreeIndex.o test-query.o)
+PHASE_FIVE_INDEX = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o BTreeIndex.o test-phase-5-index.o)
 
 OBJ = $(wildcard $(OBJDIR)/*.o)
 
@@ -61,6 +62,9 @@ test-phase-3.out: $(COMPILER) $(PHASE_THREE)
 	$(CC) $(CCFLAGS) -o $(EXECDIR)/$@ $^ -ll -lsqlite3
 
 test-query.out: $(COMPILER) $(QUERY)
+	$(CC) $(CCFLAGS) -o $(EXECDIR)/$@ $^ -ll -lsqlite3
+
+test-phase-5-index.out: $(PHASE_FIVE_INDEX)
 	$(CC) $(CCFLAGS) -o $(EXECDIR)/$@ $^ -ll -lsqlite3
 
 project: test-phase-1.out test-phase-2.out test-phase-3-data-loader.out test-phase-3.out test-query.out

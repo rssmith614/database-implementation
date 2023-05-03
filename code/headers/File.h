@@ -13,10 +13,13 @@ class Record;
 
 class Page {
 private:
-	RecordList myRecs;
 	
 	int numRecs;
+
+protected:
+
 	int curSizeInBytes;
+	RecordList myRecs;
 
 public:
 	// constructor & destructor
@@ -42,6 +45,53 @@ public:
 	void EmptyItOut();
 };
 
+class IndexPage : public Page {
+public: enum pageType { INTERMEDIATE, LEAF };
+private:
+
+	pageType type = LEAF;
+
+	off_t parent = -1;
+	off_t pageId;
+
+	int lastPtr;
+	int numKeys;
+
+	vector<int> keys;
+	vector<off_t> ptrs;
+
+public:	
+
+	IndexPage();
+	~IndexPage();
+
+	off_t Add(int key, off_t ptr);
+	int Find(int key, off_t &ptr);
+
+	int AddIntermediate(int key, off_t ptr);
+
+	void Generate(vector<int> &keys, vector<off_t> &ptrs);
+	// remove the upper half of the keys from the page and return them
+	void Split(vector<int> &newKeys, vector<off_t> &newPtrs);
+
+	void SetSibling(off_t siblingPtr);
+
+	void SetParent(off_t parentPtr);
+	off_t GetParent();
+
+	void SetPageNumber(off_t newPageNum, vector<off_t> &affectedChildren);
+	void SetPageType(pageType newType);
+
+	int PromoteEnd();
+
+	virtual void ToBinary(char* bits);
+	virtual void FromBinary(char* bits);
+
+	void EmptyItOut();
+
+	int GetChildren(vector<off_t> &ptrs);
+	void Print(ostream &_os);
+};
 
 class File {
 private:
@@ -66,11 +116,15 @@ public:
 	// get specified page from file
 	// return 0 on success, -1 otherwise
 	int GetPage(Page& putItHere, off_t whichPage);
+	
+	int GetPage(IndexPage& putItHere, off_t whichPage);
 
 	// write page to file
 	// if write is past end of file (beyond length in pages), all new pages that
 	// are past last page and before page to be written are zeroed out
 	void AddPage(Page& addMe, off_t whichPage);
+
+	void AddPage(IndexPage& addMe, off_t whichPage);
 
 	// close file and return length in number of pages
 	int Close ();

@@ -7,6 +7,7 @@
 #include "Schema.h"
 #include "Record.h"
 #include "DBFile.h"
+#include "BTreeIndex.h"
 #include "Function.h"
 #include "Comparison.h"
 #include "Map.cc"
@@ -53,6 +54,33 @@ private:
 public:
 	Scan(Schema& _schema, DBFile& _file, string _tblName);
 	virtual ~Scan();
+
+	virtual bool GetNext(Record& _record);
+
+	virtual ostream& print(ostream& _os, int depth);
+};
+
+class IndexScan : public RelationalOp {
+private:
+	// schema of records in operator
+	Schema schema;
+
+	// physical file where data to be scanned are stored
+	BTreeIndex index;
+	DBFile file;
+
+	// table name used in the query
+	string tblName;
+
+	CNF predicate;
+	Record constants;
+
+	RecordList buffer;
+
+public:
+	IndexScan(Schema& _schema, CNF& _predicate, Record& _constants,
+		DBFile& _file, BTreeIndex& _index, string _tblName);
+	virtual ~IndexScan();
 
 	virtual bool GetNext(Record& _record);
 
@@ -198,6 +226,8 @@ protected:
 	RecordList buffer;
 
 	SInt zero;
+
+	int recsPerCall = 100;
 
 public:
 	SymmetricHashJoin(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,

@@ -56,7 +56,7 @@ int DBFile::Open (char* f_path) {
 
 int DBFile::Close () {
 	file.AddPage(currentPage, currentPagePos);
-	cout << "Generated file with " << file.GetLength() << " pages" << endl;
+	cout << "Generated file " << fileName << " with " << file.GetLength() << " pages" << endl;
 	file.Close();
 	return 0;
 }
@@ -117,4 +117,8 @@ void DBFile::Load (Schema& schema, char* textFile) {
 	}
 
 	fclose(f);
+}
+
+off_t DBFile::GetCurrentPage() {
+	return currentPagePos;
 }

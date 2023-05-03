@@ -29,7 +29,7 @@ int main (int argc, char* argv[]) {
 	//write the code to load tuples from the text file to the heap file
 	// extract schema from catalog
 	Schema schema;
-	bool ret = catalog.GetSchema(tName, schema);
+	bool ret = catalog.GetSchema(table, schema);
 	if (false == ret) {
 		cerr << "Error: table " << table << " does not exist in the database" << endl;
 	}
@@ -43,7 +43,7 @@ int main (int argc, char* argv[]) {
 	dbFile.Close();
 
 	SString fPath(heapFile);
-	catalog.SetDataFile(tName, fPath);
+	catalog.SetDataFile(table, fPath);
 	
 	return 0;
 }

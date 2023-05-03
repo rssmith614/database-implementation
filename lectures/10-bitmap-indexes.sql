@@ -29,6 +29,10 @@ Manufacturer#1
 Manufacturer#2
 Manufacturer#1
 
+-- one bit for every tuple
+-- one bitmap for every possible value
+-- a 1 represents that tuple corresponding to that value
+
 Manufacturer#1 : 11000010000001100101 (3 bytes)
 Manufacturer#2 : 00000100001000000010 
 Manufacturer#3 : 00011000000100010000
@@ -149,8 +153,36 @@ How do we represent the ones in the bitmap?
 000000 (6 zeros) --> number 6 in binary : 110 (6 in binary)
 6 bits vs 3 bits --> compression ratio of 3/6
 
+how many 0s precede each 1
 11000000000001000000
-- compressed : 00 00 1110 1011
+
+1 1 00000000000 1 000000
+0 0             11      (remaining 0s are inferred)
+
+ 0 -->    0
+ 0 -->    0
+11 --> 1011
+
+001011
+
+THIS IS NOT DETERMINISTIC
+
+0 --> 0
+0 --> 0
+1 --> 1
+0 --> 0
+11 --> 3
+
+11011000100000000000 ew
+
+- RLE compressed
+(0 0) (0 0)  (1110 1011)
+   1     1   000000000001  000000
+
+what the heck is (1110) for?
+three 1s followed by a 0 = 4 numbers --> tells us our next representation will want us to read 4 bits
+so, look for a series of 1s ended with a zero
+similarly, (00) tells us both that our representation is one bit, and that bit is 0
 
 
 Manufacturer#1 : 11000010000001100101 (3 bytes)

@@ -38,6 +38,34 @@ ostream& Scan::print(ostream& _os, int depth) {
 	return _os;
 }
 
+IndexScan::IndexScan(Schema& _schema, CNF& _predicate, Record& _constants,
+	DBFile& _file, BTreeIndex& _index, string _tblName) :
+	schema(_schema), predicate(_predicate), constants(_constants),
+	file(_file), index(_index), tblName(_tblName) {
+  
+  file.MoveFirst();
+}
+
+IndexScan::~IndexScan() {
+
+}
+
+// returns true when record was retrieved
+bool IndexScan::GetNext(Record& _record) {
+	if (0 == file.GetNext(_record)) {
+		return true;
+	}
+	return false;
+
+	// we love one-liners
+	// return 0 == file.GetNext(_record) ? true : false;
+}
+
+ostream& IndexScan::print(ostream& _os, int depth) {
+	_os << "INDEX SCAN (" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, table: " << tblName << ")";
+	return _os;
+}
+
 
 Select::Select(Schema& _schema, CNF& _predicate, Record& _constants,
 	RelationalOp* _producer)
