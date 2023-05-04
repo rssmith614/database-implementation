@@ -196,8 +196,23 @@ void IndexPage :: Split (vector<int> &newKeys, vector<off_t> &newPtrs) {
 	keys.resize(m); ptrs.resize(m);
 }
 
-void IndexPage :: SetSibling (off_t siblingPtr) {
-	ptrs.push_back(siblingPtr);
+int IndexPage :: SetSibling (off_t siblingPtr) {
+	if (type == LEAF) {
+		ptrs.push_back(siblingPtr);
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+int IndexPage :: GetSibling (off_t &siblingPtr) {
+	bool doesPageHaveSibling = (keys.size() == ptrs.size() - 1);
+	if (type == LEAF && doesPageHaveSibling) {
+		siblingPtr = ptrs.back();
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 void IndexPage :: SetParent(off_t parentPtr) {

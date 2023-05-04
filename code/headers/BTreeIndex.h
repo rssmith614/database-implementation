@@ -33,6 +33,7 @@ public:
     void InsertIntermediate(off_t where, int key, off_t ptr);
 
     int Find(SInt key, off_t &pageNumber);
+    int FindRange(SInt lowerBound, SInt upperBound, off_t &startPage, off_t &endPage);
 
     void Print(ostream &_os, off_t pageToPrint);
 };

@@ -74,7 +74,8 @@ public:
 	// remove the upper half of the keys from the page and return them
 	void Split(vector<int> &newKeys, vector<off_t> &newPtrs);
 
-	void SetSibling(off_t siblingPtr);
+	int SetSibling(off_t siblingPtr);
+	int GetSibling(off_t &siblingPtr);
 
 	void SetParent(off_t parentPtr);
 	off_t GetParent();

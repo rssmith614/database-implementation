@@ -46,6 +46,12 @@ int BTreeIndex::Build(string indexName, string tblName, SString attName, Schema&
         if (key == 60000)
             cout << 60000 << " was read from dbfile page " << ptr << endl;
 
+        if (key == 34691)
+            cout << 34691 << " was read from dbfile page " << ptr << endl;
+
+        if (key == 46084)
+            cout << 46084 << " was read from dbfile page " << ptr << endl;
+
         off_t ret = currentIdxPage.Add(key, ptr);
 
         while (ret != 0) {
@@ -232,4 +238,23 @@ int BTreeIndex::Find(SInt key, off_t &pageNumber) {
     }
 
     return ret;
+}
+
+int BTreeIndex::FindRange(SInt lowerBound, SInt upperBound, off_t &startPage, off_t &endPage) {
+    // find lower bound first
+    int ret = Find(lowerBound, startPage);
+    if (-1 == ret) {
+        return ret;
+    } else {
+        // look for upper bound on same page
+        ret = Find(upperBound, endPage);
+        // traverse siblings until upper bound is found
+        while (-1 == ret) {
+            off_t sibling;
+            if (-1 == currentIdxPage.GetSibling(sibling)) return -1;
+            idxFile.GetPage(currentIdxPage, sibling);
+            ret = Find(upperBound, endPage);
+        }
+        return ret;
+    }
 }
