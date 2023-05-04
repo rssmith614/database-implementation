@@ -117,21 +117,11 @@ int BTreeIndex::Build(string indexName, string tblName, SString attName, Schema&
                 }
             }
         }
-        
-        // idxFile.AddPage(currentIdxPage, currentIdxPagePos);
-
-        // if (recCount++ % 100 == 0) {
-        //     cout << recCount << " insertions:" << endl;
-        //     Print(cout, 0);
-        // }
-
-        // if (recCount > 100) {
-        //     break;
-        // }
 
     }
     
     cout << "index built with " << maxPageId+1 << " pages" << endl;
+    // Print(cout, 0);
 	return 0;
 }
 
@@ -158,19 +148,20 @@ void BTreeIndex :: PrepareNewRoot (int key, off_t left, off_t right) {
 
 void BTreeIndex :: InsertIntermediate(off_t where, int key, off_t ptr) {
     idxFile.GetPage(currentIdxPage, where);
+    off_t currentParent = currentIdxPage.GetParent();
     int ret = currentIdxPage.AddIntermediate(key, ptr);
 
     if (-1 == ret) {
         // intermediate page was full :(
         vector<int> keys;
         vector<off_t> ptrs;
+        vector<off_t> ptrsThatNeedNewParents;
         currentIdxPage.Split(keys, ptrs);
         off_t left, right;
         if (where == 0) {
             int newRootKey = currentIdxPage.PromoteEnd();
             // put first half on a "new" page (assign new page number)
             left = ++maxPageId;
-            vector<off_t> ptrsThatNeedNewParents;
             currentIdxPage.SetPageNumber(left, ptrsThatNeedNewParents);
             currentIdxPage.SetPageType(IndexPage::INTERMEDIATE);
             // define its parent as the root
@@ -202,20 +193,30 @@ void BTreeIndex :: InsertIntermediate(off_t where, int key, off_t ptr) {
             // create the new root that points to children
             PrepareNewRoot(newRootKey, left, right);
         } else {
+            int newKey = currentIdxPage.PromoteEnd();
             // save
+            left = where;
             idxFile.AddPage(currentIdxPage, left);
 
             right = ++maxPageId;
             // start with empty page
             currentIdxPage.EmptyItOut();
+            
+            currentIdxPage.SetPageNumber(right, ptrsThatNeedNewParents);
             currentIdxPage.SetPageType(IndexPage::INTERMEDIATE);
             // put second half in new page
             currentIdxPage.Generate(keys, ptrs);
             // parent is the same as the the node we just split off of
-            currentIdxPage.SetParent(currentIdxPage.GetParent());
+            
             idxFile.AddPage(currentIdxPage, right);
-            // promote the smallest key of right node
-            InsertIntermediate(currentIdxPage.GetParent(), keys[0], right);
+
+            for (auto ptr : ptrsThatNeedNewParents) {
+                idxFile.GetPage(currentIdxPage, ptr);
+                currentIdxPage.SetParent(right);
+                idxFile.AddPage(currentIdxPage, ptr);
+            }
+            // promote the largest key of left node
+            InsertIntermediate(currentParent, newKey, right);
         }
     } else {
         idxFile.AddPage(currentIdxPage, where);

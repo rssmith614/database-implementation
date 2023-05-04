@@ -140,8 +140,13 @@ off_t IndexPage::Add(int _key, off_t _ptr) {
 int IndexPage::AddIntermediate(int _key, off_t _ptr) {
 	auto key_it = upper_bound(keys.begin(), keys.end(), _key);
 	auto ptr_it = ptrs.begin() + (key_it - keys.begin()) + 1;
+	
 	keys.insert(key_it, _key);
-	ptrs.insert(ptr_it, _ptr);
+	if (key_it != keys.end()) {
+		ptrs.insert(ptr_it, _ptr);
+	} else {
+		ptrs.push_back(_ptr);
+	}
 
 	if (sizeof(off_t)*2 + sizeof(int)*2 + sizeof(char) + keys.size() * sizeof(int) + ptrs.size() * sizeof(off_t) > PAGE_SIZE) {
 		return -1;
@@ -294,15 +299,15 @@ int IndexPage :: GetChildren (vector<off_t> &_ptrs) {
 }
 
 void IndexPage :: Print (ostream &_os) {
-	_os << "Page: " << pageId << '\n';
+	_os << "Page: " << pageId << " (" << (type == 0 ? "Intermediate" : "Leaf") << ")" << '\n';
 	_os << "Parent: " << parent << '\n';
 	_os << " ";
 	for (auto key : keys) {
-		_os << key << " ";
+		_os << key << "\t  ";
 	}
 	_os << '\n';
 	for (auto ptr : ptrs) {
-		_os << ptr << " ";
+		_os << ptr << "\t";
 	}
 	_os << '\n';
 	_os << "================\n";
