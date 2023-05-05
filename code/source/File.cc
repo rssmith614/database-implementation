@@ -174,6 +174,28 @@ int IndexPage::Find(int _key, off_t &_ptr) {
 	return -1;
 }
 
+int IndexPage :: FindRange(int _lower, int _upper, unordered_set<off_t> &_ptrs, off_t &_sibling) {
+	auto key_lower = lower_bound(keys.begin(), keys.end(), _lower);
+	auto key_upper = keys.end();
+	if (_upper != -1) {
+		key_upper = upper_bound(keys.begin(), keys.end(), _upper);
+	}
+
+	auto ptr_lower = ptrs.begin() + (key_lower - keys.begin());
+	auto ptr_upper = ptrs.begin() + (key_upper - keys.begin());
+
+	unordered_set<off_t> temp(ptr_lower, ptr_upper);
+
+	_ptrs = temp;
+
+	if (key_upper == keys.end() && ptrs.size() + 1 == keys.size()) {
+		_sibling = ptrs.back();
+		return 1;
+	}
+
+	return 0;
+}
+
 void IndexPage :: Generate (vector<int> &_keys, vector<off_t> &_ptrs) {
 	keys.erase(keys.begin(), keys.end());
 	ptrs.erase(ptrs.begin(), ptrs.end());

@@ -5,6 +5,8 @@
 #include "File.h"
 #include "DBFile.h"
 
+#include <unordered_set>
+
 class BTreeIndex {
 private:
 
@@ -27,13 +29,15 @@ public:
     ~BTreeIndex();
 	BTreeIndex(const BTreeIndex& _copyMe);
 
+    void Read(string fileName);
+
     int Build(string indexName, string tblName, SString attName, Schema& schema);
 
     void PrepareNewRoot(int key, off_t left, off_t right);
     void InsertIntermediate(off_t where, int key, off_t ptr);
 
     int Find(SInt key, off_t &pageNumber);
-    int FindRange(SInt lowerBound, SInt upperBound, off_t &startPage, off_t &endPage);
+    int FindRange(SInt lowerBound, SInt upperBound, unordered_set<off_t> &pages);
 
     void Print(ostream &_os, off_t pageToPrint);
 };

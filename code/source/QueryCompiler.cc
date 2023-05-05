@@ -144,6 +144,65 @@ void QueryCompiler::CreateScans(Schema* forestSchema, RelationalOp** forest, int
 	}
 }
 
+void QueryCompiler::CreateIndexScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* _tables, AndList* _predicate) {
+	SString tName("orders");
+	SString dbFileName;
+	catalog->GetDataFile(tName, dbFileName);
+
+	DBFile dbFile;
+	dbFile.Open((char*)((string) dbFileName).c_str());
+
+	SString indexFileName("idx_orders_orderkey");
+
+	BTreeIndex indexFile;
+	indexFile.Read((string) indexFileName);
+
+	for (int i=0; i < nTbl; i++) {
+		CNF cnf;
+		Record constants;
+		int ret = cnf.ExtractCNF(*_predicate, forestSchema[i], constants);
+
+		SInt lower(-1), upper(-1);
+		int idxOfIdxAtt = -1;
+
+		if (ret > 0) {
+			for (int j=0; j < cnf.numAnds; j++) {
+				auto condition = cnf.andList[j];
+				int idxOfAttInSchema = -1;
+				int idxOfConstInRec = -1;
+
+				if (condition.operand1 == Left) {
+					idxOfAttInSchema = condition.whichAtt1;
+					idxOfConstInRec = condition.whichAtt2;
+				} else {
+					idxOfAttInSchema = condition.whichAtt2;
+					idxOfConstInRec = condition.whichAtt1;
+				}
+
+				string attName = (string) forestSchema[i].GetAtts()[idxOfAttInSchema].name;
+
+				if (!(attName == "o_orderkey")) break;
+
+				idxOfIdxAtt = idxOfAttInSchema;
+
+				if (condition.op == LessThan) {
+					upper = ((int*) constants.GetColumn(idxOfConstInRec))[0];
+				} else if (condition.op == GreaterThan) {
+					lower = ((int*) constants.GetColumn(idxOfConstInRec))[0];
+				} else if (condition.op == Equals) {
+					upper = -2;
+					lower = ((int*) constants.GetColumn(idxOfConstInRec))[0];
+				}
+
+			}
+			if (idxOfIdxAtt != -1) {
+				forest[i] = new IndexScan(dbFile, indexFile, lower, upper, idxOfIdxAtt);
+				idxOfIdxAtt = -1;
+			}
+		}
+	}
+}
+
 void QueryCompiler::CreateSelects(Schema* forestSchema, RelationalOp** forest, int nTbl, AndList* predicate) {
 	for (int i = 0; i < nTbl; i++) {
 		Record literal;
@@ -172,6 +231,9 @@ void QueryCompiler::CreateSelects(Schema* forestSchema, RelationalOp** forest, i
 				}
 			}
 			forestSchema[i].SetNoTuples(noTuples);
+			if (dynamic_cast<IndexScan*>(forest[i])) {
+				break;
+			}
 			// 							  schema	  	 condition	constants  scan (leaf node)
 			RelationalOp* op = new Select(forestSchema[i],	cnf,	literal,	forest[i]);
 			// replace leaf (scan) with new select operator
@@ -429,6 +491,8 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	Schema* forestSchema = new Schema[nTbl];
 	
 	CreateScans(forestSchema, forest, nTbl, _tables);
+
+	CreateIndexScans(forestSchema, forest, nTbl, _tables, _predicate);
 
 	// push-down selections: create a SELECT operator wherever necessary
 	// needed when predicate compares table attribute with constant or another attribute from same table

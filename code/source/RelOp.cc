@@ -38,12 +38,9 @@ ostream& Scan::print(ostream& _os, int depth) {
 	return _os;
 }
 
-IndexScan::IndexScan(Schema& _schema, CNF& _predicate, Record& _constants,
-	DBFile& _file, BTreeIndex& _index, string _tblName) :
-	schema(_schema), predicate(_predicate), constants(_constants),
-	file(_file), index(_index), tblName(_tblName) {
-  
-  file.MoveFirst();
+IndexScan::IndexScan(DBFile& _file, BTreeIndex& _index, SInt _lower, SInt _upper, int _attCol):
+	file(_file), index(_index), lower(_lower), upper(_upper), attCol(_attCol) {
+	file.MoveFirst();
 }
 
 IndexScan::~IndexScan() {
@@ -52,17 +49,103 @@ IndexScan::~IndexScan() {
 
 // returns true when record was retrieved
 bool IndexScan::GetNext(Record& _record) {
-	if (0 == file.GetNext(_record)) {
+	off_t page;
+	unordered_set<off_t> pages;
+	if (done) {
+		return false;
+	}
+
+	if (buffer.Length() > 0) {
+		buffer.Remove(_record);
+		if (buffer.Length() == 0) done = true;
 		return true;
 	}
-	return false;
+	// get attr key
+	// use key to search index file
+	// get db file page number
+	if ((int) upper == -2) {
+		int ret = index.Find(lower, page);
+		if (-1 == ret) {
+			done = true;
+			return false;
+		}
+		file.SetPage(page);
 
-	// we love one-liners
-	// return 0 == file.GetNext(_record) ? true : false;
+		ret = file.GetNext(_record); 
+
+		while (0 == ret) {
+			if ((int) lower == ((int*)_record.GetColumn(attCol))[0]){
+				done = true;	
+				return true;
+			}
+			ret = file.GetNext(_record);
+		}
+
+	} else {
+		int ret = index.FindRange(lower, upper, pages);
+		if (-1 == ret){
+			done = true;
+			return false;
+		}
+		for (off_t p : pages) {
+			file.SetPage(p);
+
+			ret = file.GetNext(_record);
+
+			if ((int)lower == -1){
+				while (0 == ret) {
+					if ((int) upper > ((int*)_record.GetColumn(attCol))[0]){
+						buffer.Append(_record);
+					}
+					ret = file.GetNext(_record);
+					if (file.GetCurrentPage() != p) {
+						break;
+					}
+				}
+			} else if ((int)upper == -1) {
+				while (0 == ret) {
+					if ((int) lower < ((int*)_record.GetColumn(attCol))[0]){
+						buffer.Append(_record);
+					}
+					ret = file.GetNext(_record);
+					if (file.GetCurrentPage() != p){
+						break;
+					}
+				}
+			} else {
+				while (0 == ret) {
+					if ((int) upper > ((int*)_record.GetColumn(attCol))[0] &&
+						(int) lower < ((int*)_record.GetColumn(attCol))[0]) {
+						buffer.Append(_record);
+					}
+					ret = file.GetNext(_record);
+					if (file.GetCurrentPage() != p) {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// pull db file data
+
+	// scan and find key
+	
+	
+
+	buffer.MoveToStart();
+
+	if (buffer.Length() > 0) {
+		buffer.Remove(_record);
+		if (buffer.Length() == 0) done = true;
+		return true;
+	}
+
+	return false;
 }
 
 ostream& IndexScan::print(ostream& _os, int depth) {
-	_os << "INDEX SCAN (" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, table: " << tblName << ")";
+	_os << "INDEX SCAN ()";
 	return _os;
 }
 

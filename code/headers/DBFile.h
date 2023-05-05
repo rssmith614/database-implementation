@@ -31,6 +31,7 @@ public:
 	int Close ();
 
 	void MoveFirst ();
+	void SetPage(off_t _destinationPage);
 	int GetNext (Record& _fetchMe);
 
 	void AppendRecord (Record& _addMe);

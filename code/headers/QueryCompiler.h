@@ -12,6 +12,7 @@
 #include "Catalog.h"
 #include "ParseTree.h"
 #include "RelOp.h"
+#include "BTreeIndex.h"
 
 using namespace std;
 
@@ -22,6 +23,7 @@ private:
 
 	void GreedyJoin(Schema* forestSchema, int& nTbl, AndList* _predicate, RelationalOp** forest);
 	void CreateScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* tables);
+	void CreateIndexScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* _tables, AndList* _predicate);
 	void CreateSelects(Schema* forestSchema, RelationalOp** forest, int nTbl, AndList* predicate);
 	void CreateGroupBy(Schema& saplingSchema, RelationalOp* &sapling, NameList* groupingAtts, FuncOperator* finalFunction);
 	void CreateFunction(Schema& saplingSchema, RelationalOp* &sapling, FuncOperator* finalFunction);

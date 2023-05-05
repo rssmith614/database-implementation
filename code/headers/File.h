@@ -6,6 +6,8 @@
 #include "Record.h"
 #include "List.cc"
 
+#include <unordered_set>
+
 using namespace std;
 
 
@@ -67,6 +69,7 @@ public:
 
 	off_t Add(int key, off_t ptr);
 	int Find(int key, off_t &ptr);
+	int FindRange(int lower, int upper, unordered_set<off_t> &ptrs, off_t &sibling);
 
 	int AddIntermediate(int key, off_t ptr);
 

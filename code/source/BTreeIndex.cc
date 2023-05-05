@@ -9,6 +9,11 @@ BTreeIndex::BTreeIndex(const BTreeIndex& _copyMe):
         // m.CopyFrom(_copyMe.m);
 }
 
+void BTreeIndex::Read(string fileName) {
+    idxFileName = "../data/" + fileName + ".idx";
+    idxFile.Open(-1, (char*) idxFileName.c_str());
+}
+
 void BTreeIndex::Print(ostream &_os, off_t pageToPrint) {
     idxFile.GetPage(currentIdxPage, pageToPrint);
     currentIdxPage.Print(_os);
@@ -127,6 +132,7 @@ int BTreeIndex::Build(string indexName, string tblName, SString attName, Schema&
     }
     
     cout << "index built with " << maxPageId+1 << " pages" << endl;
+    idxFile.Close();
     // Print(cout, 0);
 	return 0;
 }
@@ -208,10 +214,10 @@ void BTreeIndex :: InsertIntermediate(off_t where, int key, off_t ptr) {
             // start with empty page
             currentIdxPage.EmptyItOut();
             
+            currentIdxPage.Generate(keys, ptrs);
             currentIdxPage.SetPageNumber(right, ptrsThatNeedNewParents);
             currentIdxPage.SetPageType(IndexPage::INTERMEDIATE);
             // put second half in new page
-            currentIdxPage.Generate(keys, ptrs);
             // parent is the same as the the node we just split off of
             
             idxFile.AddPage(currentIdxPage, right);
@@ -240,20 +246,25 @@ int BTreeIndex::Find(SInt key, off_t &pageNumber) {
     return ret;
 }
 
-int BTreeIndex::FindRange(SInt lowerBound, SInt upperBound, off_t &startPage, off_t &endPage) {
+int BTreeIndex::FindRange(SInt lowerBound, SInt upperBound, unordered_set<off_t> &pages) {
     // find lower bound first
-    int ret = Find(lowerBound, startPage);
+    off_t tempPage;
+    int ret = -1;
+    if (lowerBound > 0) {
+        ret = Find(lowerBound, tempPage);
+    } else {
+        ret = Find(upperBound, tempPage);
+    }
     if (-1 == ret) {
         return ret;
     } else {
-        // look for upper bound on same page
-        ret = Find(upperBound, endPage);
-        // traverse siblings until upper bound is found
-        while (-1 == ret) {
-            off_t sibling;
-            if (-1 == currentIdxPage.GetSibling(sibling)) return -1;
-            idxFile.GetPage(currentIdxPage, sibling);
-            ret = Find(upperBound, endPage);
+        // save all ptrs (except for sibling) that occur on and after key
+        unordered_set<off_t> temp;
+        ret = currentIdxPage.FindRange(lowerBound, upperBound, temp, tempPage);
+        pages.insert(temp.begin(), temp.end());
+        while (ret == 1) {
+            ret = currentIdxPage.FindRange(lowerBound, upperBound, temp, tempPage);
+            pages.insert(temp.begin(), temp.end());
         }
         return ret;
     }

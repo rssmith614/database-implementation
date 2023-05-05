@@ -66,6 +66,11 @@ void DBFile::MoveFirst () {
 	file.GetPage(currentPage, currentPagePos);
 }
 
+void DBFile::SetPage(off_t _destinationPage) {
+	currentPagePos = _destinationPage;
+	file.GetPage(currentPage, currentPagePos);
+}
+
 // returns 0 if record was retrieved
 int DBFile::GetNext (Record& rec) {
 	// look for the next record
@@ -82,6 +87,7 @@ int DBFile::GetNext (Record& rec) {
 			if (0 == currentPage.GetFirst(rec)) {
 				return 1;
 			}
+			
 		} else {
 			return 1;
 		}

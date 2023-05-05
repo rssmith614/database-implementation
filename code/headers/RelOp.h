@@ -69,17 +69,16 @@ private:
 	BTreeIndex index;
 	DBFile file;
 
-	// table name used in the query
-	string tblName;
-
-	CNF predicate;
-	Record constants;
-
 	RecordList buffer;
+	SInt lower;
+	SInt upper;
+	int attCol;
+
+	bool done = false;
+	
 
 public:
-	IndexScan(Schema& _schema, CNF& _predicate, Record& _constants,
-		DBFile& _file, BTreeIndex& _index, string _tblName);
+	IndexScan(DBFile& _file, BTreeIndex& _index, SInt _lower, SInt _upper, int _attCol);
 	virtual ~IndexScan();
 
 	virtual bool GetNext(Record& _record);

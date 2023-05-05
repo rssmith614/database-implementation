@@ -14,7 +14,7 @@ COMPILER = $(addprefix $(OBJDIR)/,QueryParser.o QueryLexer.o)
 
 PHASE_ONE = $(addprefix $(OBJDIR)/,Schema.o Catalog.o test-phase-1.o)
 PHASE_TWO = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-2.o)
-PHASE_THREE_DATA_LOADER = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-3-data-loader.o)
+PHASE_THREE_DATA_LOADER = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o BTreeIndex.o test-phase-3-data-loader.o)
 PHASE_THREE = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o test-phase-3.o)
 QUERY = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o BTreeIndex.o test-query.o)
 PHASE_FIVE_INDEX = $(addprefix $(OBJDIR)/,Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryCompiler.o BTreeIndex.o test-phase-5-index.o)
