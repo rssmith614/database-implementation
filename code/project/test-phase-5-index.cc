@@ -27,22 +27,22 @@ int main(int argc, char* argv[]) {
     cout << "building index " << indexName << " on attribute " << attName << endl;
     idx.Build(indexName, tableName, attName, schema);
 
-    SInt lookFor(60000);
-    off_t onPage;
-    int ret = idx.Find(lookFor, onPage);
-    if (ret == 0) {
-        cout << "found " << lookFor << " on page " << onPage << endl;
-    } else {
-        cout << "couldn't find " << lookFor << endl;
-    }
+    // SInt lookFor(60000);
+    // off_t onPage;
+    // int ret = idx.Find(lookFor, onPage);
+    // if (ret == 0) {
+    //     cout << "found " << lookFor << " on page " << onPage << endl;
+    // } else {
+    //     cout << "couldn't find " << lookFor << endl;
+    // }
 
-    SInt lower(34691);
-    SInt upper(46084);
-    off_t start, end;
-    ret = idx.FindRange(lower, upper, start, end);
-    if (ret == 0) {
-        cout << "values between " << lower << " to " << upper << " can be found on pages " << start << "-" << end << endl;
-    } else {
-        cout << "key error: " << lower << " or " << upper << endl;
-    }
+    // SInt lower(34691);
+    // SInt upper(46084);
+    // off_t start, end;
+    // ret = idx.FindRange(lower, upper, start, end);
+    // if (ret == 0) {
+    //     cout << "values between " << lower << " to " << upper << " can be found on pages " << start << "-" << end << endl;
+    // } else {
+    //     cout << "key error: " << lower << " or " << upper << endl;
+    // }
 }

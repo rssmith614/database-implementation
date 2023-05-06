@@ -10,6 +10,7 @@
 
 #include "Schema.h"
 #include "Config.h"
+#include "Map.h"
 
 using namespace std;
 
@@ -28,6 +29,12 @@ protected:
 	StringVector attributes;
 	unordered_map<string, Schema> schema_map;
 	map<string, pair<int, string> > table_map;
+
+	// unordered_map<string, pair<string, string> > index_map;
+
+	// Map<SString, SString> index_map;
+
+	vector<pair<SString, pair<string, string> > > index_map;
 
 	char buffer[PIPE_BUFFERSIZE];
 	bool dirty;
@@ -97,6 +104,9 @@ public:
 	 * Return true if operation successful, i.e., _table exists, false otherwise.
 	 */
 	bool DropTable(SString& _table);
+
+	// void GetIndexes(StringVector& _idxNames, StringVector& _tableNames, StringVector& _attNames);
+	bool HasIndex(SString _attName, string &_tableName, string &_idxName);
 
 	/* Overload printing operator for Catalog.
 	 * Print the content of the catalog in a friendly format:

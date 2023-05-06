@@ -145,18 +145,14 @@ void QueryCompiler::CreateScans(Schema* forestSchema, RelationalOp** forest, int
 }
 
 void QueryCompiler::CreateIndexScans(Schema* forestSchema, RelationalOp** forest, int nTbl, TableList* _tables, AndList* _predicate) {
-	SString tName("orders");
+
 	SString dbFileName;
-	catalog->GetDataFile(tName, dbFileName);
-
 	DBFile dbFile;
-	dbFile.Open((char*)((string) dbFileName).c_str());
 
-	SString indexFileName("idx_orders_orderkey");
-
+	SString indexFileName;
 	BTreeIndex indexFile;
-	indexFile.Read((string) indexFileName);
 
+	// all tables in query
 	for (int i=0; i < nTbl; i++) {
 		CNF cnf;
 		Record constants;
@@ -166,22 +162,43 @@ void QueryCompiler::CreateIndexScans(Schema* forestSchema, RelationalOp** forest
 		int idxOfIdxAtt = -1;
 
 		if (ret > 0) {
+			// every predicate from WHERE
 			for (int j=0; j < cnf.numAnds; j++) {
 				auto condition = cnf.andList[j];
 				int idxOfAttInSchema = -1;
 				int idxOfConstInRec = -1;
 
-				if (condition.operand1 == Left) {
+				// find attribute from predicate
+				if (condition.operand1 == Left && condition.operand2 == Literal) {
 					idxOfAttInSchema = condition.whichAtt1;
 					idxOfConstInRec = condition.whichAtt2;
-				} else {
+				} else if (condition.operand1 == Literal && condition.operand2 == Right) {
 					idxOfAttInSchema = condition.whichAtt2;
 					idxOfConstInRec = condition.whichAtt1;
+				} else {
+					continue;
 				}
 
-				string attName = (string) forestSchema[i].GetAtts()[idxOfAttInSchema].name;
+				SString attName;
+				forestSchema[i].Name(attName, idxOfAttInSchema);
 
-				if (!(attName == "o_orderkey")) break;
+				// int test = forestSchema[i].Index(attName);
+
+				string tableName, indexName;
+
+				// see if we have an index we can use on the attribute
+				if (catalog->HasIndex(attName, tableName, indexName)) {
+					SString tName(tableName);
+					SString dataFile;
+					catalog->GetDataFile(tName, dataFile);
+
+					dbFile.Open((char*)((string) dataFile).c_str());
+
+					indexFileName = "../data/" + indexName + ".idx";
+					indexFile.Read((string) indexFileName);
+				} else {
+					continue;
+				}
 
 				idxOfIdxAtt = idxOfAttInSchema;
 
@@ -231,9 +248,9 @@ void QueryCompiler::CreateSelects(Schema* forestSchema, RelationalOp** forest, i
 				}
 			}
 			forestSchema[i].SetNoTuples(noTuples);
-			if (dynamic_cast<IndexScan*>(forest[i])) {
-				break;
-			}
+			// if (dynamic_cast<IndexScan*>(forest[i])) {
+			// 	break;
+			// }
 			// 							  schema	  	 condition	constants  scan (leaf node)
 			RelationalOp* op = new Select(forestSchema[i],	cnf,	literal,	forest[i]);
 			// replace leaf (scan) with new select operator

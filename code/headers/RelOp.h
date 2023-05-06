@@ -321,6 +321,8 @@ private:
 	// output file where to write the result records
 	string outFile;
 
+	ofstream f;
+
 	// operator generating data
 	RelationalOp* producer;
 

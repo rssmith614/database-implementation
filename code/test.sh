@@ -1,17 +1,20 @@
 #!/bin/bash
 
 if [ $# -eq 0 ]; then
-    echo "Usage: test.sh [query_number]"
+    echo "Usage: test.sh [query_number_start] [query_number_end]"
     exit 1
 fi
 
-if [ $1 = "all" ]; then
-    N=20
+if [ $# -eq 2 ]; then
+    START=$1
+    END=$2
     RES=0
     > output_diff.txt
-    for I in {1..20}
+
+    for (( I=$START; I<=$END; I++))
     do
-        sql="../queries/phase-4/$I.sql" 
+        sql="../queries/demo/$I.sql" 
+        > output.txt
         echo $sql >> output_diff.txt
 
         sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
@@ -30,9 +33,12 @@ if [ $1 = "all" ]; then
         echo "==========================================================" >> output_diff.txt
     done
     
+    let "N = $END - $START + 1"
+
     echo passed $RES / $N queries
 else
-    sql="../queries/phase-4/$1.sql"
+    sql="../queries/demo/$1.sql"
+    > output.txt
 
     sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
     execs/test-query.out < $sql > /dev/null

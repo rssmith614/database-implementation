@@ -84,6 +84,8 @@ public:
 	// return -1 if attribute is not present
 	int Index(SString& _attName);
 
+	int Name(SString &_attName, int _idxOfAttInSchema);
+
 	// find number of distincts of specified attribute
 	// return -1 if attribute is not present
 	SInt GetDistincts(SString& _attName);

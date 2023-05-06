@@ -40,6 +40,10 @@ public:
     int FindRange(SInt lowerBound, SInt upperBound, unordered_set<off_t> &pages);
 
     void Print(ostream &_os, off_t pageToPrint);
+
+    string GetIdxFileName() {
+        return idxFileName;
+    }
 };
 
 #endif // BTREEINDEX_H

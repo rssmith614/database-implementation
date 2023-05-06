@@ -162,6 +162,11 @@ int Schema::Index(SString& _attName) {
 	return -1;
 }
 
+int Schema::Name(SString &_attName, int _idxOfAttInSchema) {
+	_attName = atts[_idxOfAttInSchema].name;
+	return 0;
+}
+
 Type Schema::FindType(SString& _attName) {
 	int pos = Index(_attName);
 	if (pos == -1) return Integer;

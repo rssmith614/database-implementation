@@ -50,6 +50,23 @@ static int readAttributes(void* data, int argc, char** argv, char** azColName) {
 	return 0;
 }
 
+static int readIndexes(void* data, int argc, char** argv, char** azColName) {
+	StringVector attributes;
+	StringVector types;
+	IntVector distincts;
+	string curTable("");
+
+	string idxName = argv[0];
+	SString aName = (string) argv[1];
+	string tName = argv[2];
+
+	// static_cast<Map<SString, SString>*>(data)->Insert(aName, idxName);
+
+	static_cast<vector<pair<SString, pair<string, string> > >*>(data)->push_back(make_pair(aName, make_pair(tName, idxName)));
+	
+	return 0;
+}
+
 Catalog::Catalog(SString& _fileName) {
 	filename = _fileName;
 	int rc = sqlite3_open(((string) _fileName).c_str(), &(db));
@@ -74,6 +91,14 @@ Catalog::Catalog(SString& _fileName) {
 		sqlite3_free(errMsg);
 	}
 
+	stmt = "CREATE TABLE IF NOT EXISTS Indexes (name VARCHAR, attribute VARCHAR, tablename VARCHAR);";
+	rc = sqlite3_exec(db, stmt.c_str(), NULL, 0, &errMsg);
+
+	if (rc != SQLITE_OK) {
+		cerr << "Error in \'Indexes\' table creation" << endl;
+		sqlite3_free(errMsg);
+	}
+
 	stmt = "SELECT * FROM Tables;";
 	rc = sqlite3_exec(db, stmt.c_str(), readTables, (void*)&(table_map), &errMsg);
 
@@ -83,6 +108,14 @@ Catalog::Catalog(SString& _fileName) {
 
 	stmt = "SELECT * FROM Attributes ORDER BY position;";
 	rc = sqlite3_exec(db, stmt.c_str(), readAttributes, (void*)&(schema_map), &errMsg);
+
+	if (rc != SQLITE_OK) {
+		cerr << errMsg << endl;
+		sqlite3_free(errMsg);
+	}
+
+	stmt = "SELECT * FROM Indexes;";
+	rc = sqlite3_exec(db, stmt.c_str(), readIndexes, (void*)&(index_map), &errMsg);
 
 	if (rc != SQLITE_OK) {
 		cerr << errMsg << endl;
@@ -361,6 +394,33 @@ bool Catalog::DropTable(SString& _table) {
 
 	dirty = true;
 	return true;
+}
+
+bool Catalog::HasIndex(SString _attName, string &_tableName, string &_idxName) {
+	// auto it = index_map.find(_attName);
+	// if (it != index_map.end()) {
+	// 	_tableName = it->second.first;
+	// 	_idxName = it->second.second;
+	// 	return true;
+	// } else {
+	// 	return false;
+	// }
+	// if (index_map.IsThere(_attName)) {
+	// 	_idxName = index_map.CurrentData();
+	// 	return true;
+	// } else {
+	// 	return false;
+	// }
+
+	for (auto index : index_map) {
+		if (index.first == _attName) {
+			_tableName = index.second.first;
+			_idxName = index.second.second;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 ostream& operator<<(ostream& _os, Catalog& _c) {

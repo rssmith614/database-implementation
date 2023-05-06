@@ -145,7 +145,17 @@ bool IndexScan::GetNext(Record& _record) {
 }
 
 ostream& IndexScan::print(ostream& _os, int depth) {
-	_os << "INDEX SCAN ()";
+	_os << "INDEX SCAN (" << index.GetIdxFileName() << ", ";
+	if ((int) upper == -2) {
+		_os << "att = " << lower;
+	} else if ((int) upper == -1) {
+		_os << "att > " << lower;
+	} else if ((int) lower == -1) {
+		_os << "att < " << upper;
+	} else {
+		_os << lower << " < att < " << upper;
+	}
+	_os << ")";
 	return _os;
 }
 
@@ -177,7 +187,7 @@ bool Select::GetNext(Record& _record) {
 
 ostream& Select::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
-	_os << "SELECT (" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "└────>";
+	_os << "SELECT (~" << schema.GetNoTuples() << " tuples, " << schema.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "└────>";
 	producer->print(_os, depth+1);
 	return _os;
 }
@@ -229,7 +239,7 @@ bool Join::GetNext(Record& _record) {
 
 ostream& Join::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');		
-	_os << "JOIN (" << schemaOut.GetNoTuples() << " tuples, " << schemaOut.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "├────>";
+	_os << "JOIN (~" << schemaOut.GetNoTuples() << " tuples, " << schemaOut.GetNumAtts() << " atts, " << predicate.numAnds << " conditions)\n" << tabs << "├────>";
 	left->print(_os, depth+1);
 	_os << "\n" << tabs << "└────>";
 	right->print(_os, depth+1);
@@ -682,7 +692,8 @@ ostream& GroupBy::print(ostream& _os, int depth) {
 
 
 WriteOut::WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer) :
-	schema(_schema), outFile(_outFile), producer(_producer) {
+	schema(_schema), outFile(_outFile), producer(_producer),
+	f(outFile, ofstream::out | ofstream::trunc) {
 
 }
 
@@ -691,8 +702,6 @@ WriteOut::~WriteOut() {
 }
 
 bool WriteOut::GetNext(Record& _record) {
-	// create output text file
-	ofstream f(outFile, ios::out | ios::trunc);
 	if (!f.is_open()) {
 		cerr << "Couldn't open output file " << outFile << endl;
 	}
@@ -708,7 +717,7 @@ bool WriteOut::GetNext(Record& _record) {
 
 ostream& WriteOut::print(ostream& _os, int depth) {
 	string tabs(depth, '\t');
-	_os << "OUTPUT (" << schema.GetNoTuples() << " tuples, "<< schema.GetNumAtts() << " atts)\n" << tabs << "└────>";
+	_os << "OUTPUT (~" << schema.GetNoTuples() << " tuples, "<< schema.GetNumAtts() << " atts)\n" << tabs << "└────>";
 	producer->print(_os, depth+1);
 	return _os;
 }

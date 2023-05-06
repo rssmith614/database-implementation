@@ -10,7 +10,7 @@ BTreeIndex::BTreeIndex(const BTreeIndex& _copyMe):
 }
 
 void BTreeIndex::Read(string fileName) {
-    idxFileName = "../data/" + fileName + ".idx";
+    idxFileName = fileName;
     idxFile.Open(-1, (char*) idxFileName.c_str());
 }
 
@@ -48,14 +48,14 @@ int BTreeIndex::Build(string indexName, string tblName, SString attName, Schema&
         SInt skey(key);
         off_t ptr = dbFile.GetCurrentPage();
 
-        if (key == 60000)
-            cout << 60000 << " was read from dbfile page " << ptr << endl;
+        // if (key == 60000)
+        //     cout << 60000 << " was read from dbfile page " << ptr << endl;
 
-        if (key == 34691)
-            cout << 34691 << " was read from dbfile page " << ptr << endl;
+        // if (key == 34691)
+        //     cout << 34691 << " was read from dbfile page " << ptr << endl;
 
-        if (key == 46084)
-            cout << 46084 << " was read from dbfile page " << ptr << endl;
+        // if (key == 46084)
+        //     cout << 46084 << " was read from dbfile page " << ptr << endl;
 
         off_t ret = currentIdxPage.Add(key, ptr);
 
@@ -129,6 +129,10 @@ int BTreeIndex::Build(string indexName, string tblName, SString attName, Schema&
             }
         }
 
+    }
+
+    if (!firstPageWritten) {
+        idxFile.AddPage(currentIdxPage, 0);
     }
     
     cout << "index built with " << maxPageId+1 << " pages" << endl;
@@ -256,6 +260,8 @@ int BTreeIndex::FindRange(SInt lowerBound, SInt upperBound, unordered_set<off_t>
         ret = Find(upperBound, tempPage);
     }
     if (-1 == ret) {
+        cout << "Error: key " << ((lowerBound > 0) ? lowerBound : upperBound) << " not found in " << idxFileName << endl;
+        cout << "To use index, key must exist in table" << endl;
         return ret;
     } else {
         // save all ptrs (except for sibling) that occur on and after key
