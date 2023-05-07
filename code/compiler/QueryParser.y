@@ -16,6 +16,10 @@
 	struct NameList* groupingAtts; // grouping attributes
 	struct NameList* attsToSelect; // the attributes in SELECT
 	int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query 
+	int indexCreation;
+	char* indexName;
+	char* indexTable;
+	char* indexAtt;
 %}
 
 
@@ -30,6 +34,9 @@
 	struct NameList* myNames;
 	char* actualChars;
 	char whichOne;
+	char* myIndexName;
+	char* myIndexTable;
+	char* myIndexAtt;
 }
 
 
@@ -45,6 +52,9 @@
 %token WHERE
 %token SUM
 %token AND
+%token CREATE
+%token INDEX
+%token ON
 
 %type <myAndList> AndList
 %type <myOperand> SimpleExp
@@ -55,6 +65,9 @@
 %type <myTables> Tables
 %type <myBoolOperand> Literal
 %type <myNames> Atts
+%type <myIndexName> IndexName
+%type <myIndexTable> Table
+%type <myIndexAtt> Attribute
 
 %start SQL
 
@@ -72,6 +85,7 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	tables = $4;
 	predicate = $6;	
 	groupingAtts = NULL;
+	indexCreation = 0;
 }
 
 | SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts
@@ -79,6 +93,15 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	tables = $4;
 	predicate = $6;	
 	groupingAtts = $9;
+	indexCreation = 0;
+}
+
+| CREATE INDEX IndexName ON Table Attribute
+{
+	indexName = $3;
+	indexTable = $5;
+	indexAtt = $6;
+	indexCreation = 1;
 };
 
 
@@ -323,6 +346,21 @@ SimpleExp: YY_FLOAT
         $$ = (struct FuncOperand*) malloc (sizeof (struct FuncOperand));
         $$->code = NAME;
         $$->value = $1;
+};
+
+IndexName: YY_NAME
+{
+	$$ = $1;
+};
+
+Table: YY_NAME
+{
+	$$ = $1;
+};
+
+Attribute: '(' YY_NAME ')'
+{
+	$$ = $2;
 };
 
 %%

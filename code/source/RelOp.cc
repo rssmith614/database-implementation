@@ -692,8 +692,7 @@ ostream& GroupBy::print(ostream& _os, int depth) {
 
 
 WriteOut::WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer) :
-	schema(_schema), outFile(_outFile), producer(_producer),
-	f(outFile, ofstream::out | ofstream::trunc) {
+	schema(_schema), outFile(_outFile), producer(_producer) {
 
 }
 
@@ -702,6 +701,8 @@ WriteOut::~WriteOut() {
 }
 
 bool WriteOut::GetNext(Record& _record) {
+	ofstream f(outFile, ofstream::out | ofstream::trunc);
+
 	if (!f.is_open()) {
 		cerr << "Couldn't open output file " << outFile << endl;
 	}

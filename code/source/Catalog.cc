@@ -152,6 +152,13 @@ bool Catalog::Save() {
 		sqlite3_free(errMsg);
 	}
 
+	stmt = "DELETE FROM Indexes;";
+	rc = sqlite3_exec(db, stmt.c_str(), readIndexes, (void*)&(index_map), &errMsg);
+	
+	if (rc != SQLITE_OK) {
+		cerr << errMsg << endl;
+		sqlite3_free(errMsg);
+	}
 
 	for (auto it1 = table_map.begin(); it1 != table_map.end(); it1++) {
 		stmt = "INSERT INTO Tables VALUES(?, ?, ?);";
@@ -203,6 +210,28 @@ bool Catalog::Save() {
 			sqlite3_finalize(stmt_handle);			
 		}
 
+	}
+
+	for (auto index : index_map) {
+		stmt = "INSERT INTO Indexes VALUES(?, ?, ?);";
+		rc = sqlite3_prepare_v2(db, stmt.c_str(), -1, &stmt_handle, &stmt_leftover);
+		if (rc != SQLITE_OK){
+			cout << "not ok" << stmt << endl;
+			cout << "error is" << sqlite3_errmsg(db) << endl;
+			exit(1);
+		}
+		sqlite3_reset(stmt_handle);
+		sqlite3_clear_bindings(stmt_handle);
+		sqlite3_bind_text(stmt_handle, 1, (index.second.second).c_str(), -1, 0); // index name
+		sqlite3_bind_text(stmt_handle, 2, ((string) index.first).c_str(), -1, 0); // attribute name
+		sqlite3_bind_text(stmt_handle, 3, (index.second.first).c_str(), -1, 0); // table name
+		rc = sqlite3_step(stmt_handle);
+		if (rc != SQLITE_DONE){
+			cout << "not done" << stmt << endl;
+			cout << "error is" << sqlite3_errmsg(db) << endl;
+			exit(1);
+		}
+		sqlite3_finalize(stmt_handle);
 	}
 
 	return true;
@@ -396,22 +425,19 @@ bool Catalog::DropTable(SString& _table) {
 	return true;
 }
 
-bool Catalog::HasIndex(SString _attName, string &_tableName, string &_idxName) {
-	// auto it = index_map.find(_attName);
-	// if (it != index_map.end()) {
-	// 	_tableName = it->second.first;
-	// 	_idxName = it->second.second;
-	// 	return true;
-	// } else {
-	// 	return false;
-	// }
-	// if (index_map.IsThere(_attName)) {
-	// 	_idxName = index_map.CurrentData();
-	// 	return true;
-	// } else {
-	// 	return false;
-	// }
+bool Catalog::CreateIndex(SString _attName, string _tableName, string _idxName) {
+	if (HasIndex(_attName, _tableName, _idxName)) {
+		cout << "Error: An index already exists on attribute " << _attName << endl;
+		return false;
+	}
+	
+	index_map.push_back(make_pair(_attName, make_pair(_tableName, _idxName)));
 
+	dirty = true;
+	return true;
+}
+
+bool Catalog::HasIndex(SString _attName, string &_tableName, string &_idxName) {
 	for (auto index : index_map) {
 		if (index.first == _attName) {
 			_tableName = index.second.first;

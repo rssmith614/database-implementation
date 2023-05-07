@@ -24,6 +24,10 @@ extern struct AndList* predicate; // the predicate in WHERE
 extern struct NameList* groupingAtts; // grouping attributes
 extern struct NameList* attsToSelect; // the attributes in SELECT
 extern int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query
+extern int indexCreation;
+extern char* indexName;
+extern char* indexTable;
+extern char* indexAtt;
 
 extern "C" int yyparse();
 extern "C" int yylex_destroy();
@@ -55,17 +59,35 @@ int main () {
 
 	if (parse != 0) return -1;
 
-	// at this point we have the parse tree in the ParseTree data structures
-	// we are ready to invoke the query compiler with the given query
-	// the result is the execution tree built from the parse tree and optimized
-	QueryExecutionTree queryTree;
-	compiler.Compile(tables, attsToSelect, finalFunction, predicate,
-		groupingAtts, distinctAtts, queryTree);
+	if (1 == indexCreation) {
+		SString table((string) indexTable);
+		Schema schema;
+		if (!catalog.GetSchema(table, schema)) {
+			return -1;
+		}
 
-	cout << queryTree << endl;
+		SString attName(indexAtt);
 
-	// execute the query
-	queryTree.ExecuteQuery();
+		if (!catalog.CreateIndex(attName, (string) indexTable, (string) indexName)) {
+			return -1;
+		}
+
+		BTreeIndex index;
+		cout << "Building index " << indexName << " on " << indexTable << ": " << attName << "!" << endl;
+		index.Build(indexName, indexTable, attName, schema);
+	} else {
+		// at this point we have the parse tree in the ParseTree data structures
+		// we are ready to invoke the query compiler with the given query
+		// the result is the execution tree built from the parse tree and optimized
+		QueryExecutionTree queryTree;
+		compiler.Compile(tables, attsToSelect, finalFunction, predicate,
+			groupingAtts, distinctAtts, queryTree);
+
+		cout << queryTree << endl;
+
+		// execute the query
+		queryTree.ExecuteQuery();
+	}
 
 	return 0;
 }

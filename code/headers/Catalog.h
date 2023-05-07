@@ -30,10 +30,6 @@ protected:
 	unordered_map<string, Schema> schema_map;
 	map<string, pair<int, string> > table_map;
 
-	// unordered_map<string, pair<string, string> > index_map;
-
-	// Map<SString, SString> index_map;
-
 	vector<pair<SString, pair<string, string> > > index_map;
 
 	char buffer[PIPE_BUFFERSIZE];
@@ -105,7 +101,7 @@ public:
 	 */
 	bool DropTable(SString& _table);
 
-	// void GetIndexes(StringVector& _idxNames, StringVector& _tableNames, StringVector& _attNames);
+	bool CreateIndex(SString _attName, string _tableName, string _idxName);
 	bool HasIndex(SString _attName, string &_tableName, string &_idxName);
 
 	/* Overload printing operator for Catalog.

@@ -71,6 +71,12 @@ void yyerror(char* s);
 
 ","				return(',');
 
+"CREATE"		return(CREATE);
+
+"INDEX"			return(INDEX);
+
+"ON"			return(ON);
+
 -?[0-9]+ {
 	yylval.actualChars = strdup(yytext);
   	return(YY_INTEGER); 
