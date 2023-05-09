@@ -79,3 +79,5 @@ clean:
 	rm -f source/QueryParser.c
 	rm -f headers/QueryParser.h
 	rm -f output.txt sqlite_output.txt output_diff.txt
+	rm -f ../data/*.idx
+	sqlite3 catalog.sqlite < deleteIndexes

@@ -326,6 +326,8 @@ void QueryCompiler::CreateFunction(Schema& saplingSchema, RelationalOp* &sapling
 	StringVector attTypes; SString attType("FLOAT"); attTypes.Append(attType);
 	IntVector distincts; SInt dist(1); distincts.Append(dist);
 	Schema schemaOut(atts, attTypes, distincts);
+	SInt noTuples(1);
+	schemaOut.SetNoTuples(noTuples);
 
 	// Sum function
 	Function compute;

@@ -41,7 +41,7 @@ else
     > output.txt
 
     sqlite3 ../data/tpch.sqlite < $sql > sqlite_output.txt
-    execs/test-query.out < $sql > /dev/null
+    execs/test-query.out < $sql
 
     sort -o output.txt{,}
     sort -o sqlite_output.txt{,}
